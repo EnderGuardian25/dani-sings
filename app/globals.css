@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #A090C8;
+  --text: #2d1b3d;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #2d1b3d;
+  color: #f7f3ff;
+}
+
+@layer utilities {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-6 md:px-10;
+  }
+  .hairline {
+    background-image: linear-gradient(to right, transparent, rgba(45,27,61,0.25), transparent);
+    height: 1px;
+  }
+  /* Glass card — white/frost overlay with blur */
+  .glass {
+    background: rgba(247, 243, 255, 0.22);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(247, 243, 255, 0.38);
+    box-shadow: 0 8px 32px -12px rgba(45, 27, 61, 0.18);
+    border-radius: 1rem;
+  }
+  .underline-grow {
+    background-image: linear-gradient(to right, #5a1238, #5a1238);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .underline-grow:hover {
+    background-size: 100% 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
