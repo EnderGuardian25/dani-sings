@@ -21,7 +21,7 @@ export default function About({ liveStats }: { liveStats?: SocialStats }) {
 
         <FadeIn className="md:col-span-5">
           <div className="glass h-full p-8 md:p-10">
-            <p className="text-[12px] uppercase tracking-wider2 text-champagne">
+            <p className="text-[12px] uppercase tracking-wider2 text-salmon-deep">
               About
             </p>
             <h2 className="mt-3 font-display text-4xl text-aubergine md:text-5xl">
@@ -48,11 +48,11 @@ export default function About({ liveStats }: { liveStats?: SocialStats }) {
               </p>
             </div>
 
-            <ul className="mt-10 grid grid-cols-3 gap-6 border-t border-aubergine/20 pt-8">
+            <ul className="mt-10 grid grid-cols-3 gap-6 border-t border-dusk/40 pt-8">
               {stats.map((s) => (
                 <li key={s.label}>
                   <p className="font-display text-3xl text-aubergine">{s.value}</p>
-                  <p className="mt-1 text-[11px] uppercase tracking-wider2 text-aubergine/80">
+                  <p className="mt-1 text-[11px] uppercase tracking-wider2 text-secondary">
                     {s.label}
                   </p>
                 </li>

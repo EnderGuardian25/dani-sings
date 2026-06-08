@@ -33,7 +33,7 @@ export default function Hero() {
         >
           <motion.p
             variants={item}
-            className="text-[12px] uppercase tracking-wider2 text-champagne"
+            className="text-[12px] uppercase tracking-wider2 text-salmon-deep"
           >
             Cover Artist · Vocalist
           </motion.p>
@@ -59,14 +59,14 @@ export default function Hero() {
           <motion.div variants={item} className="mt-10 flex flex-wrap gap-4">
             <a
               href="#portfolio"
-              className="group inline-flex items-center gap-2 rounded-full bg-aubergine px-7 py-3 text-sm font-medium text-frost shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift hover:ring-1 hover:ring-champagne/60"
+              className="group inline-flex items-center gap-2 rounded-full bg-aubergine px-7 py-3 text-sm font-medium text-frost shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift hover:ring-1 hover:ring-salmon-deep/60"
             >
               Explore My Covers
               <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
             </a>
             <a
               href="#contact"
-              className="inline-flex items-center gap-2 rounded-full border border-aubergine/35 px-7 py-3 text-sm font-medium text-aubergine transition-all duration-300 hover:-translate-y-0.5 hover:bg-aubergine/10"
+              className="inline-flex items-center gap-2 rounded-full border border-taupe-deep/60 px-7 py-3 text-sm font-medium text-aubergine transition-all duration-300 hover:-translate-y-0.5 hover:bg-blush/40"
             >
               Get in Touch
             </a>

@@ -28,21 +28,17 @@ export default function Nav() {
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className="fixed inset-x-0 top-0 z-50"
     >
-      {/*
-        Frosted bar lives in its own layer so opacity can transition
-        without toggling backdrop-blur (which causes the choppy jump).
-        backdrop-filter is always active here — only opacity changes.
-      */}
-      {/* Frosted bar — opacity-fades in on scroll */}
+      {/* Frosted bar — opacity-fades in on scroll; bg via inline style to avoid Tailwind arbitrary-value issues */}
       <motion.div
         animate={{ opacity: scrolled ? 1 : 0 }}
         transition={{ duration: 0.55, ease: "easeInOut" }}
-        className="pointer-events-none absolute inset-0 border-b border-frost/20 bg-lavender/60 backdrop-blur-md"
+        className="pointer-events-none absolute inset-0 border-b border-dusk/30 backdrop-blur-md"
+        style={{ background: "rgba(240, 230, 226, 0.75)" }}
       />
 
       <div className="container-page relative flex h-16 items-center justify-between">
         <a href="#home" className="font-display text-lg tracking-wide text-aubergine">
-          Danella<span className="text-champagne">.</span>
+          Danella<span className="text-salmon-deep">.</span>
         </a>
 
         <nav className="hidden md:flex items-center gap-9">
@@ -50,7 +46,7 @@ export default function Nav() {
             <a
               key={l.href}
               href={l.href}
-              className="underline-grow font-display text-[17px] tracking-wide text-aubergine transition-colors hover:text-champagne"
+              className="underline-grow font-display text-[17px] tracking-wide text-aubergine transition-colors hover:text-salmon-deep"
             >
               {l.label}
             </a>
@@ -59,7 +55,7 @@ export default function Nav() {
 
         <a
           href="#contact"
-          className="hidden md:inline-flex items-center font-display text-[16px] italic tracking-wide text-aubergine transition-colors hover:text-champagne"
+          className="hidden md:inline-flex items-center font-display text-[16px] italic tracking-wide text-aubergine transition-colors hover:text-salmon-deep"
         >
           Book&nbsp;→
         </a>

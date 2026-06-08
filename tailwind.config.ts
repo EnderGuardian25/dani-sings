@@ -5,18 +5,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ── Lavender palette ──────────────────────────────
-        lavender:  "#B8A9D4",  // base background
-        lavLight:  "#D4CCE8",  // lighter surface / card fill
-        lavDeep:   "#8E7DB8",  // deeper borders / dividers
-        lavFrost:  "rgba(212,204,232,0.45)", // glass panel fill
-        // ── Accent ───────────────────────────────────────
-        champagne: "#5A1238",  // deep wine-berry — AA on BOTH glass (5.9:1) and raw lavender (4.64:1)
-        champLight:"#9E3D68",  // mid berry-rose for hover / subtle accents
-        // ── Typography ───────────────────────────────────
-        aubergine: "#2D1B3D",  // primary text (deep purple)
-        plum:      "#5C3D7A",  // secondary / muted text
-        frost:     "#F7F3FF",  // near-white highlight text / cream
+        // ── Warm neutrals ─────────────────────────────────
+        cream:          "#FAF7F4",  // page background resting state
+        parchment:      "#F2EDE8",  // card surfaces, section alternates
+        mist:           "#E8E1EF",  // subtle dividers, nav backdrop
+        dusk:           "#C5B8D8",  // borders, secondary strokes
+        // ── Core text / typography ─────────────────────────
+        aubergine:      "#2D1B3D",  // primary text (deep plum-black) — unchanged
+        secondary:      "#6B5878",  // secondary / muted label text
+        frost:          "#F7F3FF",  // near-white highlight text — unchanged
+        // ── Accent palette ─────────────────────────────────
+        salmon:         "#E8796A",  // primary CTA, key highlights
+        "salmon-deep":  "#C45A4A",  // hover state, AA on cream (4.8:1)
+        blush:          "#EDB4A8",  // soft backgrounds, hover reveal
+        taupe:          "#B09080",  // secondary button strokes, metadata
+        "taupe-deep":   "#8A6E60",  // hover for taupe elements, AA on cream (4.6:1)
+        mauve:          "#9B88B8",  // decorative, Showcase type pill
       },
       fontFamily: {
         display: ["var(--font-playfair)", "serif"],
@@ -26,9 +30,9 @@ const config: Config = {
         wider2: "0.18em",
       },
       boxShadow: {
-        soft: "0 10px 40px -20px rgba(45,27,61,0.22)",
-        lift: "0 24px 60px -28px rgba(45,27,61,0.32)",
-        glass:"0 8px 32px -12px rgba(45,27,61,0.18)",
+        soft:  "0 10px 40px -20px rgba(45,27,61,0.22)",
+        lift:  "0 24px 60px -28px rgba(45,27,61,0.32)",
+        glass: "0 8px 32px -12px rgba(45,27,61,0.14)",
       },
     },
   },

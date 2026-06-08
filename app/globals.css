@@ -3,8 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --bg: #A090C8;
-  --text: #2d1b3d;
+  /* Neutrals */
+  --color-cream:       #FAF7F4;
+  --color-parchment:   #F2EDE8;
+  --color-mist:        #E8E1EF;
+  --color-dusk:        #C5B8D8;
+  --color-aubergine:   #2D1B3D;
+
+  /* Accents */
+  --color-salmon:      #E8796A;
+  --color-salmon-deep: #C45A4A;
+  --color-blush:       #EDB4A8;
+  --color-taupe:       #B09080;
+  --color-taupe-deep:  #8A6E60;
+  --color-mauve:       #9B88B8;
+  --color-frost:       #F7F3FF;
+
+  /* Text semantic */
+  --text-primary:   #2D1B3D;
+  --text-secondary: #6B5878;
+  --text-muted:     #9080A0;
+  --text-on-dark:   #F7F3FF;
+  --text-on-salmon: #FAF7F4;
+
+  --bg:   #FAF7F4;
+  --text: #2D1B3D;
 }
 
 html {
@@ -28,20 +51,20 @@ body {
     @apply mx-auto w-full max-w-6xl px-6 md:px-10;
   }
   .hairline {
-    background-image: linear-gradient(to right, transparent, rgba(45,27,61,0.25), transparent);
+    background-image: linear-gradient(to right, transparent, rgba(45,27,61,0.18), transparent);
     height: 1px;
   }
-  /* Glass card — white/frost overlay with blur */
+  /* Glass card — warm cream overlay with blur */
   .glass {
-    background: rgba(247, 243, 255, 0.22);
+    background: rgba(250, 247, 244, 0.55);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(247, 243, 255, 0.38);
-    box-shadow: 0 8px 32px -12px rgba(45, 27, 61, 0.18);
+    border: 1px solid rgba(197, 184, 216, 0.35);
+    box-shadow: 0 8px 32px -12px rgba(45, 27, 61, 0.14);
     border-radius: 1rem;
   }
   .underline-grow {
-    background-image: linear-gradient(to right, #5a1238, #5a1238);
+    background-image: linear-gradient(to right, #C45A4A, #C45A4A);
     background-size: 0% 1px;
     background-position: 0 100%;
     background-repeat: no-repeat;
