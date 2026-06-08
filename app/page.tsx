@@ -5,6 +5,7 @@ import FeaturedCovers from "@/components/FeaturedCovers";
 import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
 import Nav from "@/components/Nav";
+import Performances from "@/components/Performances";
 import { getSocialStats } from "@/lib/social-stats";
 
 // Revalidate the whole page once every 24 hours so follower counts stay fresh.
@@ -20,6 +21,7 @@ export default async function Page() {
       <Hero />
       <FeaturedCovers />
       <About liveStats={socialStats} />
+      <Performances />
       <CTA />
       <Footer />
     </main>

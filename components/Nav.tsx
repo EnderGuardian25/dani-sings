@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 const links = [
-  { href: "#home",      label: "Home" },
-  { href: "#portfolio", label: "Portfolio" },
-  { href: "#about",     label: "About" },
-  { href: "#contact",   label: "Contact" },
+  { href: "#home",         label: "Home" },
+  { href: "#portfolio",    label: "Portfolio" },
+  { href: "#about",        label: "About" },
+  { href: "#performances", label: "Performances" },
+  { href: "#contact",      label: "Contact" },
 ];
 
 export default function Nav() {

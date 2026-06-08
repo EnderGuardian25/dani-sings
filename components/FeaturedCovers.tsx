@@ -72,7 +72,7 @@ export default function FeaturedCovers() {
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
           {covers.map((cover, i) => (
-            <FadeIn key={cover.postUrl} delay={i * 0.08}>
+            <FadeIn key={cover.postUrl} delay={i * 0.08} className="h-full">
               <CoverCard cover={cover} />
             </FadeIn>
           ))}
@@ -105,11 +105,11 @@ function CoverCard({ cover }: { cover: Cover }) {
       rel="noopener noreferrer"
       whileHover={{ y: -4 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="group block overflow-hidden rounded-2xl shadow-soft ring-1 ring-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-champagne"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl shadow-soft ring-1 ring-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-champagne"
       aria-label={`Watch ${cover.song} by ${cover.artist} on Instagram`}
     >
       {/* Placeholder art — full-bleed gradient with decorative music elements */}
-      <div className={`relative bg-gradient-to-br ${cover.gradient} aspect-[4/3] w-full overflow-hidden`}>
+      <div className={`relative shrink-0 bg-gradient-to-br ${cover.gradient} aspect-[4/3] w-full overflow-hidden`}>
 
         {/* Decorative rings */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -138,7 +138,7 @@ function CoverCard({ cover }: { cover: Cover }) {
       </div>
 
       {/* Caption card — inline style overrides .glass border-radius on the top corners */}
-      <div className="glass p-5" style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, border: "none" }}>
+      <div className="glass flex flex-1 flex-col p-5" style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, border: "none" }}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="font-display text-xl leading-tight text-aubergine">
@@ -152,10 +152,10 @@ function CoverCard({ cover }: { cover: Cover }) {
             →
           </span>
         </div>
-        <p className="mt-3 text-sm leading-relaxed text-aubergine/85">
+        <p className="mt-3 flex-1 text-sm leading-relaxed text-aubergine/85">
           {cover.caption}
         </p>
-        <p className="mt-3 text-[11px] uppercase tracking-wider2 text-champagne">
+        <p className="mt-4 text-[11px] uppercase tracking-wider2 text-champagne">
           View on Instagram →
         </p>
       </div>
