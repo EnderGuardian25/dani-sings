@@ -19,32 +19,32 @@ const covers: Cover[] = [
     artist: "Senaka Batagoda",
     caption: "One of my all time favorites 🤍 සැනසෙන්නම් මා by Senaka Batagoda.",
     postUrl: "https://www.instagram.com/p/DYKQiL7oTix/",
-    gradient: "from-[#7B6BB5] via-[#9880C8] to-[#C8A0D4]",
-    accent: "#E8D0F0",
+    gradient: "from-[#E8C4B8] via-[#D4B4C8] to-[#C0A8D4]",
+    accent: "#EDB4A8",
   },
   {
     song: "Heal the World",
     artist: "Michael Jackson",
     caption: "Covered this classic 😌 Heal the World by Michael Jackson.",
     postUrl: "https://www.instagram.com/p/DYcQJ9UB37z/",
-    gradient: "from-[#A090C8] via-[#B8A8D8] to-[#D4C0E8]",
-    accent: "#F0E8FF",
+    gradient: "from-[#D4C0CC] via-[#C8B4D0] to-[#B8A8D8]",
+    accent: "#F2EDE8",
   },
   {
     song: "දඟකාර හැඩකාරි",
     artist: "Bathiya & Santhush",
     caption: "දඟකාර හැඩකාරි by Bathiya & Santhush 🤍",
     postUrl: "https://www.instagram.com/p/DZC4UVRhLAm/",
-    gradient: "from-[#6858A8] via-[#8870C0] to-[#B090D0]",
-    accent: "#DDD0F8",
+    gradient: "from-[#C8B0C0] via-[#B8A0C8] to-[#A890C0]",
+    accent: "#E8E1EF",
   },
   {
     song: "You're Still the One",
     artist: "Shania Twain",
     caption: "A song that never gets old 🙂‍↔️ You're Still the One by Shania Twain.",
     postUrl: "https://www.instagram.com/p/DY3nYsdIzO4/",
-    gradient: "from-[#9080C0] via-[#C0A0C8] to-[#E0C0D8]",
-    accent: "#F4E8F8",
+    gradient: "from-[#EDD0C4] via-[#DCC0CC] to-[#CCB0D8]",
+    accent: "#FAF7F4",
   },
 ];
 
@@ -56,7 +56,7 @@ export default function FeaturedCovers() {
         <FadeIn>
           <div className="glass mb-14 flex flex-col gap-4 p-8 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-[12px] uppercase tracking-wider2 text-champagne">
+              <p className="text-[12px] uppercase tracking-wider2 text-salmon-deep">
                 Selected Work
               </p>
               <h2 className="mt-3 font-display text-4xl text-aubergine md:text-5xl">
@@ -84,7 +84,7 @@ export default function FeaturedCovers() {
               href="https://www.instagram.com/danella.decruz/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-aubergine/40 px-7 py-3 text-sm font-medium text-aubergine transition-all duration-300 hover:-translate-y-0.5 hover:bg-aubergine/10"
+              className="inline-flex items-center gap-2 rounded-full border border-taupe-deep/60 px-7 py-3 text-sm font-medium text-aubergine transition-all duration-300 hover:-translate-y-0.5 hover:bg-blush/40"
             >
               <FaInstagram className="h-4 w-4" />
               See all covers on Instagram
@@ -105,7 +105,7 @@ function CoverCard({ cover }: { cover: Cover }) {
       rel="noopener noreferrer"
       whileHover={{ y: -4 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl shadow-soft ring-1 ring-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-champagne"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl shadow-soft ring-1 ring-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-salmon-deep"
       aria-label={`Watch ${cover.song} by ${cover.artist} on Instagram`}
     >
       {/* Placeholder art — full-bleed gradient with decorative music elements */}
@@ -134,7 +134,7 @@ function CoverCard({ cover }: { cover: Cover }) {
         </div>
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-aubergine/0 transition-colors duration-400 group-hover:bg-aubergine/15" />
+        <div className="absolute inset-0 bg-aubergine/0 transition-colors duration-300 group-hover:bg-aubergine/12" />
       </div>
 
       {/* Caption card — inline style overrides .glass border-radius on the top corners */}
@@ -148,14 +148,14 @@ function CoverCard({ cover }: { cover: Cover }) {
               {cover.artist}
             </p>
           </div>
-          <span className="mt-1 shrink-0 text-aubergine/50 transition-transform duration-300 group-hover:translate-x-1">
+          <span className="mt-1 shrink-0 text-secondary transition-transform duration-300 group-hover:translate-x-1">
             →
           </span>
         </div>
         <p className="mt-3 flex-1 text-sm leading-relaxed text-aubergine/85">
           {cover.caption}
         </p>
-        <p className="mt-4 text-[11px] uppercase tracking-wider2 text-champagne">
+        <p className="mt-4 text-[11px] uppercase tracking-wider2 text-salmon-deep">
           View on Instagram →
         </p>
       </div>
