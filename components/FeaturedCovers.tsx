@@ -105,60 +105,28 @@ function CoverCard({ cover }: { cover: Cover }) {
       rel="noopener noreferrer"
       whileHover={{ y: -4 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl shadow-soft ring-1 ring-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-salmon-deep"
+      className="group glass flex h-full flex-col p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-salmon-deep"
       aria-label={`Watch ${cover.song} by ${cover.artist} on Instagram`}
     >
-      {/* Placeholder art — full-bleed gradient with decorative music elements */}
-      <div className={`relative shrink-0 bg-gradient-to-br ${cover.gradient} aspect-[4/3] w-full overflow-hidden`}>
-
-        {/* Decorative rings */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="h-48 w-48 rounded-full border border-white/15" />
-          <div className="absolute h-32 w-32 rounded-full border border-white/20" />
-          <div className="absolute h-16 w-16 rounded-full border border-white/30" />
-          <div className="absolute h-4 w-4 rounded-full bg-white/40" />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-display text-xl leading-tight text-aubergine">
+            {cover.song}
+          </p>
+          <p className="mt-0.5 text-[12px] uppercase tracking-wider2 text-aubergine/80">
+            {cover.artist}
+          </p>
         </div>
-
-        {/* Subtle waveform lines */}
-        <svg viewBox="0 0 400 80" className="absolute bottom-8 left-0 right-0 w-full opacity-20" aria-hidden>
-          <polyline
-            points="0,40 30,20 60,50 90,15 120,45 150,25 180,55 210,10 240,50 270,20 300,45 330,30 360,50 400,35"
-            fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          />
-        </svg>
-
-        {/* Instagram badge */}
-        <div className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 text-[11px] text-white/90 backdrop-blur-sm">
-          <FaInstagram className="h-3 w-3" />
-          Watch
-        </div>
-
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-aubergine/0 transition-colors duration-300 group-hover:bg-aubergine/12" />
+        <span className="mt-1 shrink-0 text-secondary transition-transform duration-300 group-hover:translate-x-1">
+          →
+        </span>
       </div>
-
-      {/* Caption card — inline style overrides .glass border-radius on the top corners */}
-      <div className="glass flex flex-1 flex-col p-5" style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, border: "none" }}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-display text-xl leading-tight text-aubergine">
-              {cover.song}
-            </p>
-            <p className="mt-0.5 text-[12px] uppercase tracking-wider2 text-aubergine/80">
-              {cover.artist}
-            </p>
-          </div>
-          <span className="mt-1 shrink-0 text-secondary transition-transform duration-300 group-hover:translate-x-1">
-            →
-          </span>
-        </div>
-        <p className="mt-3 flex-1 text-sm leading-relaxed text-aubergine/85">
-          {cover.caption}
-        </p>
-        <p className="mt-4 text-[11px] uppercase tracking-wider2 text-salmon-deep">
-          View on Instagram →
-        </p>
-      </div>
+      <p className="mt-3 flex-1 text-sm leading-relaxed text-aubergine/85">
+        {cover.caption}
+      </p>
+      <p className="mt-4 text-[11px] uppercase tracking-wider2 text-salmon-deep">
+        View on Instagram →
+      </p>
     </motion.a>
   );
 }

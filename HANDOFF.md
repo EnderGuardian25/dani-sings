@@ -135,27 +135,15 @@ Full viewport height (`min-h-[92vh]`). Staggered entrance with `variants` contai
 - "Get in Touch" — outline `border-taupe-deep/60`, hover `bg-blush/40`
 
 ### 4. Featured Covers — `components/FeaturedCovers.tsx`
-2-column grid of 4 cover cards. Each card:
-- Gradient art placeholder (blush-mauve-taupe tones — warm, varied per card)
-- Glass caption panel below (grows with `flex-1 flex-col` so all cards in a row are equal height)
-- "View on Instagram →" pinned to the bottom with `mt-auto` in `text-salmon-deep`
+2-column grid of 4 cover cards. Each card is a single `.glass` panel — no cover art or gradient image. Content:
+- Song title (Playfair Display)
+- Artist name (small caps)
+- Caption text (`flex-1` so it fills remaining height)
+- "View on Instagram →" pinned to the bottom (`mt-4`)
 
-**Equal height fix**: FadeIn wrapper gets `className="h-full"`, `motion.a` is `flex flex-col h-full`.
+**Equal height fix**: FadeIn wrapper gets `className="h-full"`, `motion.a` uses `glass flex h-full flex-col p-5` directly (no nested caption div — the card IS the glass panel).
 
-**Caption border-radius fix**: `.glass` shorthand `border-radius: 1rem` overrides Tailwind utilities. Caption uses:
-```tsx
-style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0, border: "none" }}
-```
-
-Cover card gradients (blush-mauve-taupe palette):
-```ts
-Card 1: from-[#E8C4B8] via-[#D4B4C8] to-[#C0A8D4]  // blush into mauve
-Card 2: from-[#D4C0CC] via-[#C8B4D0] to-[#B8A8D8]  // dusty rose to lavender
-Card 3: from-[#C8B0C0] via-[#B8A0C8] to-[#A890C0]  // deep mauve
-Card 4: from-[#EDD0C4] via-[#DCC0CC] to-[#CCB0D8]  // warmest — late afternoon light
-```
-
-To add/edit covers — update the `covers` array:
+To add/edit covers — update the `covers` array. The `gradient` and `accent` fields are kept in the type for future use but are not rendered:
 ```ts
 { song, artist, caption, postUrl, gradient, accent }
 ```
