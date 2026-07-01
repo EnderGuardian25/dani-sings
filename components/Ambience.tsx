@@ -21,13 +21,13 @@ const ShaderBackground = dynamic(() => import("./ShaderBackground"), {
 type RGB = [number, number, number];
 
 const scrollStops: { progress: number; color1: RGB; color2: RGB; color3: RGB }[] = [
-  { progress: 0,    color1: [250, 244, 240], color2: [240, 230, 226], color3: [225, 205, 214] }, // warm blush-cream
-  { progress: 0.2,  color1: [245, 228, 220], color2: [232, 212, 204], color3: [214, 190, 202] }, // soft petal pink
-  { progress: 0.4,  color1: [232, 214, 220], color2: [212, 192, 204], color3: [196, 172, 196] }, // warm mauve blush
-  { progress: 0.6,  color1: [222, 206, 224], color2: [200, 184, 212], color3: [180, 160, 200] }, // dusty mauve (only cool note)
-  { progress: 0.75, color1: [230, 216, 232], color2: [216, 200, 220], color3: [194, 176, 208] }, // muted blush-lavender
-  { progress: 0.9,  color1: [246, 236, 230], color2: [237, 224, 220], color3: [216, 198, 208] }, // warm parchment blush
-  { progress: 1.0,  color1: [250, 244, 240], color2: [240, 232, 228], color3: [220, 202, 210] }, // cream-rose
+  { progress: 0,    color1: [250, 240, 234], color2: [244, 224, 222], color3: [232, 190, 214] }, // warm blush-cream
+  { progress: 0.2,  color1: [248, 220, 210], color2: [238, 200, 206], color3: [222, 172, 206] }, // soft petal pink
+  { progress: 0.4,  color1: [238, 206, 216], color2: [220, 182, 208], color3: [206, 160, 210] }, // warm mauve blush
+  { progress: 0.6,  color1: [228, 198, 226], color2: [206, 176, 224], color3: [190, 160, 224] }, // dusty mauve (only cool note)
+  { progress: 0.75, color1: [236, 208, 234], color2: [220, 192, 230], color3: [204, 168, 226] }, // muted blush-lavender
+  { progress: 0.9,  color1: [248, 228, 228], color2: [240, 214, 218], color3: [222, 186, 216] }, // warm parchment blush
+  { progress: 1.0,  color1: [250, 238, 234], color2: [244, 222, 224], color3: [228, 192, 216] }, // cream-rose
 ];
 
 function rgbToHex([r, g, b]: RGB): string {
