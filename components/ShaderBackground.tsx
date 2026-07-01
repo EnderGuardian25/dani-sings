@@ -15,7 +15,7 @@ export default function ShaderBackground({ color1, color2, color3, animate }: Pr
       style={{ position: "absolute", inset: 0 }}
       pointerEvents="none"
       pixelDensity={1}
-      powerPreference="low-power"
+      powerPreference="default"
     >
       <ShaderGradient
         type="waterPlane"
@@ -24,14 +24,14 @@ export default function ShaderBackground({ color1, color2, color3, animate }: Pr
         color2={color2}
         color3={color3}
         uSpeed={0.15}
-        uStrength={1.2}
+        uStrength={0.9}
         uDensity={1.2}
-        uAmplitude={0.8}
-        uFrequency={4}
+        uAmplitude={0.6}
+        uFrequency={3.2}
         grain="off"
         lightType="3d"
         brightness={1.3}
-        reflection={0.2}
+        reflection={0.03}
         cAzimuthAngle={180}
         cPolarAngle={90}
         cDistance={4.6}
