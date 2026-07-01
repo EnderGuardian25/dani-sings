@@ -9,7 +9,7 @@
  * text/glass-panel contrast (documented in HANDOFF.md) is unaffected.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useReducedMotion } from "framer-motion";
 
@@ -67,14 +67,40 @@ export default function Ambience() {
   const reduce = useReducedMotion();
   const [colors, setColors] = useState(() => interpolateColors(0));
 
+  const maxScrollRef = useRef(1);
+
   useEffect(() => {
-    const onScroll = () => {
-      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      setColors(interpolateColors(window.scrollY / maxScroll));
+    const updateMaxScroll = () => {
+      maxScrollRef.current = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
     };
+    updateMaxScroll();
+    window.addEventListener("resize", updateMaxScroll);
+
+    let ticking = false;
+
+    const updateColors = () => {
+      const next = interpolateColors(window.scrollY / maxScrollRef.current);
+      setColors((prev) =>
+        prev.color1 === next.color1 && prev.color2 === next.color2 && prev.color3 === next.color3
+          ? prev
+          : next
+      );
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(updateColors);
+      }
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    updateColors();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", updateMaxScroll);
+    };
   }, []);
 
   return (
