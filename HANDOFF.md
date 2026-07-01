@@ -1,6 +1,6 @@
 # Danella De Cruz — Portfolio Website Handoff
 
-A complete portfolio site for **Danella De Cruz**, an emerging cover artist and vocalist based in Sri Lanka. Built with Next.js 14 App Router, TypeScript, and Tailwind CSS. Aesthetic: ethereal dreamy minimalism — warm blush-mauve with glass-morphism panels.
+A complete portfolio site for **Danella De Cruz**, an emerging cover artist and vocalist based in Sri Lanka. Built with Next.js 15 App Router, TypeScript, and Tailwind CSS. Aesthetic: ethereal dreamy minimalism — warm blush-mauve with glass-morphism panels.
 
 ---
 
@@ -19,10 +19,11 @@ Runs on **port 3000**. The preview server config lives at `.claude/launch.json`.
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 14 App Router |
+| Framework | Next.js 15 App Router (React 19) |
 | Language | TypeScript |
 | Styling | Tailwind CSS v3 + custom palette |
 | Animation | Framer Motion |
+| Background | `@shadergradient/react` (WebGL `waterPlane` gradient) + `three` |
 | Icons | react-icons (FaInstagram, FaTiktok, FaSpotify) |
 | Fonts | Playfair Display (display) + Inter (body) via `next/font` |
 | Images | `next/image` |
@@ -79,7 +80,8 @@ app/
   globals.css         — Tailwind base + :root tokens + .glass + .hairline + .underline-grow
 
 components/
-  Ambience.tsx        — "use client" — scroll-driven warm bg arc + 4 spring-physics parallax orbs (fixed background)
+  Ambience.tsx        — "use client" — scroll-driven colour arc, drives the WebGL shader background (fixed, z-[-10])
+  ShaderBackground.tsx — "use client" — isolated `@shadergradient/react` waterPlane canvas, dynamically imported (ssr: false)
   Nav.tsx             — "use client" — frosted cream-blush bar fades in on scroll; salmon-deep hover
   Hero.tsx            — "use client" — staggered Framer Motion entrance animation
   FeaturedCovers.tsx  — "use client" — 4 cover cards in 2-col grid (equal-height via flex)
@@ -104,27 +106,31 @@ INSTAGRAM_SETUP.md    — full walkthrough for setting up the Instagram Graph AP
 
 ## Page Sections (top to bottom)
 
-### 1. Ambience — `components/Ambience.tsx`
-Fixed `z-index: -10` background layer. **Scroll-driven colour arc** + four `rounded-full` blurred orbs with spring-physics parallax:
+### 1. Ambience — `components/Ambience.tsx` + `components/ShaderBackground.tsx`
+Fixed `z-index: -10` background layer, now a **WebGL shader gradient** (`@shadergradient/react`, `waterPlane` type) instead of the original CSS wash + parallax orbs. `Ambience.tsx` owns the scroll-driven colour logic and passes 3 hex colours as props into `ShaderBackground`, which wraps the actual `ShaderGradientCanvas`/`ShaderGradient` and is dynamically imported with `ssr: false` (WebGL can't run server-side).
 
-**Scroll arc** — background interpolates through a warm-to-cool-to-warm journey as the user scrolls:
-| Scroll % | Colour | Hex |
-|---|---|---|
-| 0% (Hero) | Warm blush-cream | `#F0E6E2` |
-| 20% | Soft petal pink | `#E8D4CC` |
-| 40% (Portfolio) | Warm mauve blush | `#D4C0CC` |
-| 60% | Dusty mauve (only cool note) | `#C8B8D4` |
-| 75% (About) | Muted blush-lavender | `#D8C8DC` |
-| 90% (CTA) | Warm parchment blush | `#EDE0DC` |
-| 100% (Footer) | Cream-rose | `#F0E8E4` |
+**Scroll arc** — 3 colours (`color1`/`color2`/`color3`) each interpolate through their own warm-to-cool-to-warm journey across 7 scroll stops (0, 0.2, 0.4, 0.6, 0.75, 0.9, 1.0), mirroring the original single-colour arc:
+| Scroll % | Mood | color1 | color2 | color3 |
+|---|---|---|---|---|
+| 0% (Hero) | Warm blush-cream | `#FAF0EA` | `#F4E0DE` | `#E8BED6` |
+| 20% | Soft petal pink | `#F8DCD2` | `#EEC8CE` | `#DEACCE` |
+| 40% (Portfolio) | Warm mauve blush | `#EECED8` | `#DCB6D0` | `#CEA0D2` |
+| 60% | Dusty mauve (only cool note) | `#E4C6E2` | `#CEB0E0` | `#BEB0E0` |
+| 75% (About) | Muted blush-lavender | `#ECD0EA` | `#DCC0E6` | `#CCA8E2` |
+| 90% (CTA) | Warm parchment blush | `#F8E4E4` | `#F0D6DA` | `#DEBAD8` |
+| 100% (Footer) | Cream-rose | `#FAEEEA` | `#F4DEE0` | `#E4C0D8` |
 
-Implementation: manual `window.addEventListener('scroll')` → `useState` → `interpolateColor()` helper. NOT `useScroll` from Framer Motion (doesn't fire in App Router).
+Implementation: `window.addEventListener('scroll')` → `requestAnimationFrame`-throttled handler (a `ticking` guard skips re-computation until the next frame, fixing scroll jank) → `interpolateColors()` helper → `useState`. Colour state only updates if the resulting hex triple actually changed, to avoid redundant re-renders. Still NOT `useScroll` from Framer Motion — it doesn't reliably fire in the App Router.
 
-**Orbs** (warm blush palette):
-- Deep blush (top-left, stable anchor, ζ≈1.30) — `rgba(196,140,160,0.42)`
-- Mid rose (upper body, ζ≈1.07) — `rgba(220,160,170,0.30)`
-- Salmon bleed (bottom-centre, bubbly star, ζ≈0.69) — `rgba(237,180,168,0.55)`
-- Mauve wisp (right float, ζ≈0.80) — `rgba(197,184,216,0.34)`
+**Shader tuning** (`ShaderBackground.tsx` props):
+- `powerPreference="default"` — was tuned down from a high-performance GPU request to avoid forcing discrete-GPU switches on laptops
+- `uSpeed={0.15}`, `uStrength={0.9}`, `uDensity={1.2}`, `uAmplitude={0.6}`, `uFrequency={3.2}` — wave motion tuned for a slow, subtle drift (not a distracting animated background)
+- `brightness={1.3}` — raised to keep the gradient pastel rather than muddy at the shader's default brightness
+- `grain="off"` — the shader's built-in grain is disabled; a separate static SVG turbulence overlay (`opacity-[0.05]`) provides the paper-grain texture instead, layered on top of the canvas in `Ambience.tsx`
+- `reflection={0.03}` — minimal, keeps the surface matte rather than glossy
+- `animate={reduce ? "off" : "on"}` — respects `prefers-reduced-motion` via Framer Motion's `useReducedMotion()`
+
+The original 4 parallax orbs (`rounded-full` blurred divs with spring physics) were removed entirely — the shader's own wave motion now provides the sense of depth/movement.
 
 ### 2. Nav — `components/Nav.tsx`
 Fixed top bar. Backdrop: `rgba(240,230,226,0.75)` cream-blush + `backdrop-blur-md` fades in once `scrollY > 40px`. Nav link hover: `text-salmon-deep`. Applied via inline style (not Tailwind arbitrary) to avoid build issues.
@@ -242,6 +248,11 @@ Both update every **24 hours** via ISR. No cron job needed.
 | `useScroll` doesn't fire | Next.js App Router — `useScroll` from Framer Motion doesn't detect scroll | Use `window.addEventListener('scroll')` → `useMotionValue` manually |
 | Tailwind config changes need restart | Hot reload doesn't recompile `tailwind.config.ts` | Stop dev server (`Ctrl+C`) and `npm run dev` again |
 | Nav backdrop uses inline style | `bg-[rgba(...)]` Tailwind arbitrary values with commas can be unreliable at build time | Use `style={{ background: "rgba(240,230,226,0.75)" }}` on the backdrop div |
+| Scroll handler caused visible jank | Every `scroll` event synchronously ran `interpolateColors()` + `setState`, firing far more often than the browser could paint | Guard with a `ticking` boolean and defer the actual update into `requestAnimationFrame` |
+| Shader had a harsh highlight on the left edge | Default `ShaderGradient` camera/light angle produced a hard specular edge inconsistent with the soft pastel aesthetic | Tuned `cAzimuthAngle`/`cPolarAngle`/`reflection` down in `ShaderBackground.tsx` |
+| Colours dipped below the design's "pastel floor" mid-scroll | Naive per-channel RGB lerp between scroll stops can under/overshoot brightness for a couple of frames, especially on the green channel at the 0.6 stop (dropped to 160 before the fix) | Re-tuned the 0.6 scroll-stop RGB values directly in `Ambience.tsx` (green raised 160 → 176) and raised shader `brightness` to keep the floor pastel throughout |
+| `ShaderGradientCanvas` requesting a discrete GPU | `powerPreference="high-performance"` (the library default) can force laptops to switch to a discrete GPU just for a background gradient | Set `powerPreference="default"` in `ShaderBackground.tsx` |
+| WebGL canvas can't render server-side | Next.js Server/Static rendering has no WebGL context | `ShaderBackground` is loaded via `next/dynamic` with `ssr: false` in `Ambience.tsx` |
 
 ---
 
