@@ -1,35 +1,49 @@
 "use client";
 
 /**
- * Watercolour-wash background — scroll-driven warm colour arc + spring-physics parallax orbs.
+ * Shader-gradient background — scroll-driven warm colour arc rendered via WebGL.
  *
- * Background interpolates through a warm-to-cool-to-warm arc as the user scrolls,
+ * A `waterPlane` shader gradient blends 3 colours that shift as the user scrolls,
  * mirroring the page's emotional journey: blush anticipation → dreamy mauve → grounded warmth.
- *
- * Orb spring tuning:
- *   ζ < 1 (underdamped) → overshoot + settle = the "bubbly" effect
- *   Deep blush  ζ ≈ 1.30 — overdamped, stable anchor
- *   Mid rose    ζ ≈ 1.07 — just barely damped
- *   Salmon bleed ζ ≈ 0.69 — the main bubbly star
- *   Mauve wisp  ζ ≈ 0.80 — gentle float
+ * Colours are derived from the same muted-pastel family as the original CSS wash so
+ * text/glass-panel contrast (documented in HANDOFF.md) is unaffected.
  */
 
 import { useEffect, useState } from "react";
-import { useMotionValue, useTransform, useSpring, motion } from "framer-motion";
+import dynamic from "next/dynamic";
+import { useReducedMotion } from "framer-motion";
+
+const ShaderBackground = dynamic(() => import("./ShaderBackground"), {
+  ssr: false,
+  loading: () => null,
+});
 
 type RGB = [number, number, number];
 
-const scrollStops: { progress: number; color: RGB }[] = [
-  { progress: 0,    color: [240, 230, 226] }, // warm blush-cream
-  { progress: 0.2,  color: [232, 212, 204] }, // soft petal pink
-  { progress: 0.4,  color: [212, 192, 204] }, // warm mauve blush
-  { progress: 0.6,  color: [200, 184, 212] }, // dusty mauve (only cool note)
-  { progress: 0.75, color: [216, 200, 220] }, // muted blush-lavender
-  { progress: 0.9,  color: [237, 224, 220] }, // warm parchment blush
-  { progress: 1.0,  color: [240, 232, 228] }, // cream-rose
+const scrollStops: { progress: number; color1: RGB; color2: RGB; color3: RGB }[] = [
+  { progress: 0,    color1: [250, 244, 240], color2: [240, 230, 226], color3: [225, 205, 214] }, // warm blush-cream
+  { progress: 0.2,  color1: [245, 228, 220], color2: [232, 212, 204], color3: [214, 190, 202] }, // soft petal pink
+  { progress: 0.4,  color1: [232, 214, 220], color2: [212, 192, 204], color3: [196, 172, 196] }, // warm mauve blush
+  { progress: 0.6,  color1: [222, 206, 224], color2: [200, 184, 212], color3: [180, 160, 200] }, // dusty mauve (only cool note)
+  { progress: 0.75, color1: [230, 216, 232], color2: [216, 200, 220], color3: [194, 176, 208] }, // muted blush-lavender
+  { progress: 0.9,  color1: [246, 236, 230], color2: [237, 224, 220], color3: [216, 198, 208] }, // warm parchment blush
+  { progress: 1.0,  color1: [250, 244, 240], color2: [240, 232, 228], color3: [220, 202, 210] }, // cream-rose
 ];
 
-function interpolateColor(progress: number): string {
+function rgbToHex([r, g, b]: RGB): string {
+  const toHex = (c: number) => Math.round(c).toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function lerpColor(a: RGB, b: RGB, t: number): RGB {
+  return [
+    a[0] + (b[0] - a[0]) * t,
+    a[1] + (b[1] - a[1]) * t,
+    a[2] + (b[2] - a[2]) * t,
+  ];
+}
+
+function interpolateColors(progress: number): { color1: string; color2: string; color3: string } {
   const clamped = Math.max(0, Math.min(1, progress));
   let lo = scrollStops[0];
   let hi = scrollStops[scrollStops.length - 1];
@@ -42,108 +56,34 @@ function interpolateColor(progress: number): string {
   }
   const range = hi.progress - lo.progress;
   const t = range === 0 ? 0 : (clamped - lo.progress) / range;
-  const r = Math.round(lo.color[0] + (hi.color[0] - lo.color[0]) * t);
-  const g = Math.round(lo.color[1] + (hi.color[1] - lo.color[1]) * t);
-  const b = Math.round(lo.color[2] + (hi.color[2] - lo.color[2]) * t);
-  return `rgb(${r},${g},${b})`;
+  return {
+    color1: rgbToHex(lerpColor(lo.color1, hi.color1, t)),
+    color2: rgbToHex(lerpColor(lo.color2, hi.color2, t)),
+    color3: rgbToHex(lerpColor(lo.color3, hi.color3, t)),
+  };
 }
 
 export default function Ambience() {
-  const scrollY = useMotionValue(0);
-  const [bgColor, setBgColor] = useState(() => interpolateColor(0));
+  const reduce = useReducedMotion();
+  const [colors, setColors] = useState(() => interpolateColors(0));
 
   useEffect(() => {
     const onScroll = () => {
       const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      scrollY.set(window.scrollY);
-      setBgColor(interpolateColor(window.scrollY / maxScroll));
+      setColors(interpolateColors(window.scrollY / maxScroll));
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
-  }, [scrollY]);
-
-  // ── Raw scroll targets ──────────────────────────────────────────────────
-  const yVioletRaw = useTransform(scrollY, (v) => v *  0.04);
-  const yMidRaw    = useTransform(scrollY, (v) => v * -0.03);
-  const yPinkRaw   = useTransform(scrollY, (v) => v * -0.12);
-  const xPinkRaw   = useTransform(scrollY, (v) => v * -0.02);
-  const yWispRaw   = useTransform(scrollY, (v) => v * -0.08);
-  const xWispRaw   = useTransform(scrollY, (v) => v *  0.015);
-
-  // ── Spring-smoothed positions ───────────────────────────────────────────
-  const yViolet = useSpring(yVioletRaw, { stiffness: 80,  damping: 23, mass: 0.9 });
-  const yMid    = useSpring(yMidRaw,    { stiffness: 70,  damping: 18, mass: 1.0 });
-  const yPink   = useSpring(yPinkRaw,   { stiffness: 50,  damping: 12, mass: 1.5 });
-  const xPink   = useSpring(xPinkRaw,   { stiffness: 50,  damping: 12, mass: 1.5 });
-  const yWisp   = useSpring(yWispRaw,   { stiffness: 60,  damping: 14, mass: 1.2 });
-  const xWisp   = useSpring(xWispRaw,   { stiffness: 60,  damping: 14, mass: 1.2 });
+  }, []);
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-
-      {/* ── Scroll-driven warm background wash ── */}
-      <div
-        className="absolute inset-0"
-        style={{ background: bgColor, transition: "background 120ms linear" }}
-      />
-
-      {/* ── Deep blush orb — stable anchor, top-left ── */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          y: yViolet,
-          width: "90%",
-          height: "80%",
-          left: "-22%",
-          top: "-28%",
-          background: "rgba(196, 140, 160, 0.42)",
-          filter: "blur(100px)",
-        }}
-      />
-
-      {/* ── Mid rose orb — upper body warmth ── */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          y: yMid,
-          width: "65%",
-          height: "55%",
-          left: "12%",
-          top: "-12%",
-          background: "rgba(220, 160, 170, 0.30)",
-          filter: "blur(90px)",
-        }}
-      />
-
-      {/* ── Salmon bleed orb — the bubbly parallax star ── */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          y: yPink,
-          x: xPink,
-          width: "82%",
-          height: "72%",
-          left: "22%",
-          bottom: "-18%",
-          background: "rgba(237, 180, 168, 0.55)",
-          filter: "blur(110px)",
-        }}
-      />
-
-      {/* ── Mauve wisp — right side float ── */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          y: yWisp,
-          x: xWisp,
-          width: "46%",
-          height: "62%",
-          right: "-8%",
-          top: "28%",
-          background: "rgba(197, 184, 216, 0.34)",
-          filter: "blur(90px)",
-        }}
+      <ShaderBackground
+        color1={colors.color1}
+        color2={colors.color2}
+        color3={colors.color3}
+        animate={reduce ? "off" : "on"}
       />
 
       {/* ── Paper grain — subtle watercolour texture, static ── */}
