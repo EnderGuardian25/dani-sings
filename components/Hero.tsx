@@ -1,13 +1,13 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 
-const container = {
+const container: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
 };
 
-const item = {
+const item: Variants = {
   hidden: { opacity: 0, y: 18 },
   show: {
     opacity: 1,
