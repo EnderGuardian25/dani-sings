@@ -24,7 +24,7 @@ const scrollStops: { progress: number; color1: RGB; color2: RGB; color3: RGB }[]
   { progress: 0,    color1: [250, 240, 234], color2: [244, 224, 222], color3: [232, 190, 214] }, // warm blush-cream
   { progress: 0.2,  color1: [248, 220, 210], color2: [238, 200, 206], color3: [222, 172, 206] }, // soft petal pink
   { progress: 0.4,  color1: [238, 206, 216], color2: [220, 182, 208], color3: [206, 160, 210] }, // warm mauve blush
-  { progress: 0.6,  color1: [228, 198, 226], color2: [206, 176, 224], color3: [190, 160, 224] }, // dusty mauve (only cool note)
+  { progress: 0.6,  color1: [228, 198, 226], color2: [206, 176, 224], color3: [190, 176, 224] }, // dusty mauve (only cool note)
   { progress: 0.75, color1: [236, 208, 234], color2: [220, 192, 230], color3: [204, 168, 226] }, // muted blush-lavender
   { progress: 0.9,  color1: [248, 228, 228], color2: [240, 214, 218], color3: [222, 186, 216] }, // warm parchment blush
   { progress: 1.0,  color1: [250, 238, 234], color2: [244, 222, 224], color3: [228, 192, 216] }, // cream-rose
