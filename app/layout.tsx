@@ -16,6 +16,7 @@ const inter = Inter_Tight({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://danelladc.com"),
   title: "Danella De Cruz — Cover Artist & Vocalist",
   description:
     "Cover artist and vocalist Danella De Cruz. A curated portfolio of covers, collaborations, and bookings.",
