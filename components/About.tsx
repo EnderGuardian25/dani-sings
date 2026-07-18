@@ -1,4 +1,5 @@
 import { FALLBACKS, type SocialStats } from "@/lib/social-stats";
+import CountUp from "./CountUp";
 import FadeIn from "./FadeIn";
 
 export default function About({ liveStats }: { liveStats?: SocialStats }) {
@@ -11,7 +12,8 @@ export default function About({ liveStats }: { liveStats?: SocialStats }) {
       value: liveStats?.tiktok ?? FALLBACKS.tiktok,
       label: "TikTok Followers",
     },
-    { value: "2024", label: "Performing Since" },
+    // Years count from 2000 (not 0) so the roll reads as a year, not a tally.
+    { value: "2025", label: "Performing Since", from: 2000 },
   ];
 
   return (
@@ -51,7 +53,9 @@ export default function About({ liveStats }: { liveStats?: SocialStats }) {
             <ul className="mt-10 grid grid-cols-3 gap-6 border-t border-dusk/40 pt-8">
               {stats.map((s) => (
                 <li key={s.label}>
-                  <p className="font-display text-3xl text-aubergine">{s.value}</p>
+                  <p className="font-display text-3xl text-aubergine">
+                    <CountUp value={s.value} from={s.from ?? 0} />
+                  </p>
                   <p className="mt-1 text-[11px] uppercase tracking-wider2 text-secondary">
                     {s.label}
                   </p>

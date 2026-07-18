@@ -18,8 +18,8 @@ const TT_USERNAME = "danella.decruz";
 
 /** Fallback values shown when a live fetch fails or username is not set. */
 export const FALLBACKS = {
-  instagram: "10K+",
-  tiktok: "10K+",
+  instagram: "8.8K+",
+  tiktok: "6.6K+",
 };
 
 export type SocialStats = {

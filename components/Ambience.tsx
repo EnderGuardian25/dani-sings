@@ -9,7 +9,7 @@
  * text/glass-panel contrast (documented in HANDOFF.md) is unaffected.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useReducedMotion } from "framer-motion";
 
@@ -65,7 +65,12 @@ function interpolateColors(progress: number): { color1: string; color2: string; 
 
 export default function Ambience() {
   const reduce = useReducedMotion();
-  const [colors, setColors] = useState(() => interpolateColors(0));
+
+  // Live colour target, mutated on scroll and read every frame inside the WebGL
+  // render loop (see ColorSync in ShaderBackground.tsx). Deliberately NOT React
+  // state: setState here re-rendered <ShaderGradient/>, which rebuilds its
+  // material at ~65ms per colour change — the root cause of the scroll jank.
+  const colorsRef = useRef(interpolateColors(0));
 
   const maxScrollRef = useRef(1);
 
@@ -78,14 +83,11 @@ export default function Ambience() {
 
     let ticking = false;
 
+    // Writing to a ref costs nothing, so colours now interpolate continuously
+    // (no quantisation) — the shader picks the value up on its next frame.
     const updateColors = () => {
-      const next = interpolateColors(window.scrollY / maxScrollRef.current);
-      setColors((prev) =>
-        prev.color1 === next.color1 && prev.color2 === next.color2 && prev.color3 === next.color3
-          ? prev
-          : next
-      );
       ticking = false;
+      colorsRef.current = interpolateColors(window.scrollY / maxScrollRef.current);
     };
 
     const onScroll = () => {
@@ -105,12 +107,7 @@ export default function Ambience() {
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <ShaderBackground
-        color1={colors.color1}
-        color2={colors.color2}
-        color3={colors.color3}
-        animate={reduce ? "off" : "on"}
-      />
+      <ShaderBackground colorsRef={colorsRef} animate={reduce ? "off" : "on"} />
 
       {/* ── Paper grain — subtle watercolour texture, static ── */}
       <div

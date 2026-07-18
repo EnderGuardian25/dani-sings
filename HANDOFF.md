@@ -13,6 +13,8 @@ npm run dev       # http://localhost:3000
 
 Runs on **port 3000**. The preview server config lives at `.claude/launch.json`.
 
+**Judging scroll smoothness / performance:** always use a production build (`npm run build && npm run start`) — dev-mode React overhead makes scrolling look worse than it really is. All FPS numbers quoted in this document were measured on prod builds.
+
 ---
 
 ## Tech Stack
@@ -23,6 +25,7 @@ Runs on **port 3000**. The preview server config lives at `.claude/launch.json`.
 | Language | TypeScript |
 | Styling | Tailwind CSS v3 + custom palette |
 | Animation | Framer Motion |
+| Scrolling | Lenis (`lenis`) — smooth scroll + anchor easing, see `components/SmoothScroll.tsx` |
 | Background | `@shadergradient/react` (WebGL `waterPlane` gradient) + `three` |
 | Icons | react-icons (FaInstagram, FaTiktok, FaSpotify) |
 | Fonts | Playfair Display (display) + Inter (body) via `next/font` |
@@ -75,17 +78,19 @@ Custom letter-spacing: `tracking-wider2` (0.18em)
 
 ```
 app/
-  layout.tsx          — fonts (Playfair Display + Inter), metadata, body wrapper
+  layout.tsx          — fonts (Playfair Display + Inter), metadata, body wrapper; mounts <SmoothScroll/>
   page.tsx            — async Server Component; fetches social stats; ISR revalidate: 86400
-  globals.css         — Tailwind base + :root tokens + .glass + .hairline + .underline-grow
+  globals.css         — Tailwind base + :root tokens + .glass + .hairline + .underline-grow + Lenis html.lenis rules (NO scroll-behavior: smooth — it fights Lenis)
 
 components/
+  SmoothScroll.tsx    — "use client" — headless Lenis smooth-scroll driver, mounted once in layout.tsx (respects reduced-motion; smooth-scrolls #anchor links with an 80px nav offset)
   Ambience.tsx        — "use client" — scroll-driven colour arc, drives the WebGL shader background (fixed, z-[-10])
-  ShaderBackground.tsx — "use client" — isolated `@shadergradient/react` waterPlane canvas, dynamically imported (ssr: false)
+  ShaderBackground.tsx — "use client" — isolated `@shadergradient/react` waterPlane canvas, dynamically imported (ssr: false); contains <ColorSync/> which updates colour uniforms per-frame without React re-renders
   Nav.tsx             — "use client" — frosted cream-blush bar fades in on scroll; salmon-deep hover
   Hero.tsx            — "use client" — staggered Framer Motion entrance animation
   FeaturedCovers.tsx  — "use client" — 4 cover cards in 2-col grid (equal-height via flex)
   About.tsx           — Server Component — bio + live social stats
+  CountUp.tsx         — "use client" — counts a stat up on first scroll-into-view (writes textContent directly, no per-frame React re-renders; reduced-motion → static)
   Performances.tsx    — "use client" — editorial row list inside a single blush-glass container
   CTA.tsx             — contact section with email + PDF + social links
   Footer.tsx          — copyright
@@ -120,7 +125,14 @@ Fixed `z-index: -10` background layer, now a **WebGL shader gradient** (`@shader
 | 90% (CTA) | Warm parchment blush | `#F8E4E4` | `#F0D6DA` | `#DEBAD8` |
 | 100% (Footer) | Cream-rose | `#FAEEEA` | `#F4DEE0` | `#E4C0D8` |
 
-Implementation: `window.addEventListener('scroll')` → `requestAnimationFrame`-throttled handler (a `ticking` guard skips re-computation until the next frame, fixing scroll jank) → `interpolateColors()` helper → `useState`. Colour state only updates if the resulting hex triple actually changed, to avoid redundant re-renders. Still NOT `useScroll` from Framer Motion — it doesn't reliably fire in the App Router.
+Implementation: `window.addEventListener('scroll')` → `requestAnimationFrame`-throttled handler (a `ticking` guard skips re-computation until the next frame) → `interpolateColors()` helper → **a mutable ref** (`colorsRef`), NOT React state. Still NOT `useScroll` from Framer Motion — it doesn't reliably fire in the App Router.
+
+**Scroll-jank fix (critical — do not regress this):** colours must NEVER flow into `<ShaderGradient/>` as React props after mount. Re-rendering `ShaderGradient` with new colour props makes the library rebuild its `MeshPhysicalMaterial` and recompile the shader — measured at **~65ms of main-thread stall per colour change** (production build), which cratered scrolling to ~40 FPS. Instead:
+- `Ambience.tsx` writes interpolated colours into `colorsRef.current` on scroll (a ref write costs nothing, so colours interpolate continuously — no quantisation needed).
+- `ShaderBackground.tsx` renders `<ShaderGradient/>` exactly once with mount-time colours, and a tiny `<ColorSync/>` component inside the canvas updates the shader's per-channel colour uniforms (`uC1r..uC3b`) directly on the GPU program every frame via `useFrame`.
+- Those uniforms live in a closure only reachable inside the material's `onBeforeCompile`, so `ColorSync` wraps it once at mount, forces a single recompile, and captures the live `shader.uniforms` object.
+
+Measured result (production, RTX 4060, 240Hz): full-page scroll sweep at 240 FPS with **zero** long frames and zero long tasks, colours fully live. Before the fix: ~40 FPS with a 60–70ms long task on every colour change.
 
 **Shader tuning** (`ShaderBackground.tsx` props):
 - `powerPreference="default"` — was tuned down from a high-performance GPU request to avoid forcing discrete-GPU switches on laptops
@@ -128,6 +140,7 @@ Implementation: `window.addEventListener('scroll')` → `requestAnimationFrame`-
 - `brightness={1.3}` — raised to keep the gradient pastel rather than muddy at the shader's default brightness
 - `grain="off"` — the shader's built-in grain is disabled; a separate static SVG turbulence overlay (`opacity-[0.05]`) provides the paper-grain texture instead, layered on top of the canvas in `Ambience.tsx`
 - `reflection={0.03}` — minimal, keeps the surface matte rather than glossy
+- `cDistance={3.2}` — camera pulled in from 4.6 so the water-plane geometry's **left edge sits off-screen**. At 4.6 on wide viewports the plane didn't span the full width and its rendered edge showed as a pale "white wave" band down the left of the screen. Do not raise this back toward 4.6 without checking the left edge on a wide (≥1900px) viewport.
 - `animate={reduce ? "off" : "on"}` — respects `prefers-reduced-motion` via Framer Motion's `useReducedMotion()`
 
 The original 4 parallax orbs (`rounded-full` blurred divs with spring physics) were removed entirely — the shader's own wave motion now provides the sense of depth/movement.
@@ -157,7 +170,7 @@ To add/edit covers — update the `covers` array. The `gradient` and `accent` fi
 ### 5. About — `components/About.tsx`
 Two-column layout (5/7 split on md+). Left: name/tagline glass panel. Right: bio text + three stats.
 
-**Live stats** passed from `page.tsx` as `liveStats?: SocialStats`. Stats labels use `text-secondary`. Stats divider uses `border-dusk/40`. Falls back to `"10K+"` if live fetch fails.
+**Live stats** passed from `page.tsx` as `liveStats?: SocialStats`. Stats labels use `text-secondary`. Stats divider uses `border-dusk/40`. Falls back to `"8.8K+"` (IG) / `"6.6K+"` (TikTok) if the live fetch fails. "Performing Since" is `2025`. Each value renders through `<CountUp/>`, which rolls the number up on first scroll-into-view — followers count from 0, the year from 2000 (so it reads as a year, not a tally).
 
 ### 6. Recent Performances — `components/Performances.tsx`
 **Redesigned as an editorial row list.** Structure:
@@ -218,7 +231,7 @@ Year hardcoded to `2026`. Text uses `text-secondary`. Border `border-dusk/30`.
 **Instagram** — 3-tier waterfall:
 1. Official Graph API (requires `IG_USER_ID` + `IG_GRAPH_TOKEN` — see `INSTAGRAM_SETUP.md`)
 2. Unofficial scrape fallback
-3. Static `"10K+"` fallback
+3. Static `"8.8K+"` fallback (`FALLBACKS` in `lib/social-stats.ts`; TikTok's is `"6.6K+"`)
 
 **TikTok** — scrapes `__NEXT_DATA__` JSON from `tiktok.com/@danella.decruz`.
 
@@ -253,6 +266,9 @@ Both update every **24 hours** via ISR. No cron job needed.
 | Colours dipped below the design's "pastel floor" mid-scroll | Naive per-channel RGB lerp between scroll stops can under/overshoot brightness for a couple of frames, especially on the green channel at the 0.6 stop (dropped to 160 before the fix) | Re-tuned the 0.6 scroll-stop RGB values directly in `Ambience.tsx` (green raised 160 → 176) and raised shader `brightness` to keep the floor pastel throughout |
 | `ShaderGradientCanvas` requesting a discrete GPU | `powerPreference="high-performance"` (the library default) can force laptops to switch to a discrete GPU just for a background gradient | Set `powerPreference="default"` in `ShaderBackground.tsx` |
 | WebGL canvas can't render server-side | Next.js Server/Static rendering has no WebGL context | `ShaderBackground` is loaded via `next/dynamic` with `ssr: false` in `Ambience.tsx` |
+| Scroll stayed choppy even after the `ticking`/rAF throttle | Each colour-prop change re-rendered `<ShaderGradient/>`, which rebuilds its material + recompiles the shader: ~65ms main-thread long task per change (idle shader was fine at 240 FPS — the cost was React-driven material rebuilds, not the animation). Quantising updates into buckets only reduced how often the 65ms hit landed, not the hit itself | Bypass React entirely: scroll handler writes to `colorsRef`, `<ColorSync/>` inside the canvas mutates the shader's `uC1r..uC3b` uniforms per frame via `useFrame` (captured by wrapping `onBeforeCompile`). 240 FPS, zero long frames. See "Scroll-jank fix" above |
+| "White wave" band down the left of the screen | The `waterPlane` geometry's left edge was inside the viewport on wide screens at `cDistance={4.6}` | Reduced `cDistance` to `3.2` in `ShaderBackground.tsx` so the plane edge sits off-screen |
+| Native scrolling felt un-smooth / anchor jumps were abrupt | No smooth-scroll layer; CSS `scroll-behavior: smooth` also fights JS smooth-scroll libraries | Added Lenis via headless `SmoothScroll.tsx` (mounted in `layout.tsx`); removed `html { scroll-behavior: smooth }` and added the Lenis-recommended `html.lenis` CSS rules in `globals.css` |
 
 ---
 
