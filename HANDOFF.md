@@ -234,7 +234,7 @@ Year hardcoded to `2026`. Text uses `text-secondary`. Border `border-dusk/30`.
 
 ## Booking Form (Web3Forms)
 
-"Book →" (nav) and "Book an Event" (CTA) open `components/BookingModal.tsx` via the event bus in `lib/booking-modal-bus.ts`. Fields: Name*, Email*, Event type* (Wedding / Corporate Event / Private Party / Birthday-Anniversary / Festival / Other), Performance format (optional, defaults "Not sure yet"), Event date (min = today), Budget (free text), Venue, Message*. Option lists + length limits live in `lib/booking.ts`, shared by modal and API route.
+"Book →" (nav) and "Book an Event" (CTA) open `components/BookingModal.tsx` via the event bus in `lib/booking-modal-bus.ts`. Fields: Name*, Email*, Event type* (Wedding / Corporate Event / Private Party / Birthday-Anniversary / Festival / Other), Performance format (optional, defaults "Not sure yet"), Event date (min = today), Budget (free text), Venue* (name & city), Message (optional — emails show "No message provided." when blank). Option lists + length limits live in `lib/booking.ts`, shared by modal and API route.
 
 **Submit flow (two steps — architecture forced by Web3Forms):**
 1. `POST /api/book` — the **gate**: in-memory per-IP rate limit (**3 per 10 min**, resets on redeploy/restart), honeypot check (`botcheck` field → fake success), field validation. Returns friendly errors (400/429) shown inline in the modal.

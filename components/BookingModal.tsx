@@ -218,8 +218,8 @@ export default function BookingModal() {
           "Performance Format": form.performanceFormat || "Not sure yet",
           "Event Date": form.eventDate || "Not specified",
           Budget: form.budget || "Not specified",
-          Venue: form.venue || "Not specified",
-          message: form.message,
+          Venue: form.venue,
+          message: form.message || "No message provided.",
           botcheck: form.botcheck,
         }),
       });
@@ -417,10 +417,11 @@ export default function BookingModal() {
                     </Field>
                   </div>
 
-                  <Field label="Venue">
+                  <Field label="Venue" required>
                     <input
                       type="text"
                       name="venue"
+                      required
                       maxLength={FIELD_LIMITS.venue}
                       placeholder="Venue name & city"
                       value={form.venue}
@@ -429,10 +430,9 @@ export default function BookingModal() {
                     />
                   </Field>
 
-                  <Field label="Message" required>
+                  <Field label="Message">
                     <textarea
                       name="message"
-                      required
                       rows={4}
                       maxLength={FIELD_LIMITS.message}
                       placeholder="Tell me about your event — the occasion, timings, and anything else I should know."

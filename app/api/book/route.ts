@@ -46,6 +46,10 @@ function isRateLimited(ip: string): boolean {
 }
 
 function clientIp(req: NextRequest): string {
+  // Cloudflare puts the real client IP here (x-forwarded-for can be spoofed
+  // upstream of it); other hosts populate the x-* headers.
+  const cf = req.headers.get("cf-connecting-ip");
+  if (cf) return cf;
   const fwd = req.headers.get("x-forwarded-for");
   if (fwd) return fwd.split(",")[0].trim();
   return req.headers.get("x-real-ip") ?? "unknown";
@@ -107,9 +111,9 @@ export async function POST(req: NextRequest) {
   if (eventDate !== "" && !DATE_RE.test(eventDate))
     return bad("Invalid event date.");
   if (budget.length > FIELD_LIMITS.budget) return bad("Budget is too long.");
-  if (venue.length > FIELD_LIMITS.venue) return bad("Venue is too long.");
-  if (!message || message.length > FIELD_LIMITS.message)
-    return bad("Please include a short message.");
+  if (!venue || venue.length > FIELD_LIMITS.venue)
+    return bad("Please enter the venue name and city.");
+  if (message.length > FIELD_LIMITS.message) return bad("Message is too long.");
 
   return NextResponse.json({ ok: true });
 }
