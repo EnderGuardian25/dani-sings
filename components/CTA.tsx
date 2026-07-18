@@ -1,5 +1,6 @@
 import { FaInstagram, FaTiktok, FaSpotify } from "react-icons/fa";
 import { HiOutlineDocumentArrowDown, HiOutlineEnvelope } from "react-icons/hi2";
+import BookEventButton from "./BookEventButton";
 import FadeIn from "./FadeIn";
 
 export default function CTA() {
@@ -20,14 +21,7 @@ export default function CTA() {
             </p>
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <a
-                href="mailto:hello@danelladecruz.com?subject=Collaboration%20inquiry"
-                className="group inline-flex items-center gap-2 rounded-full bg-aubergine px-7 py-3 text-sm font-medium text-frost shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lift hover:ring-1 hover:ring-salmon-deep/60"
-                style={{ ["--hover-shadow" as string]: "0 4px 20px rgba(45,27,61,0.25)" }}
-              >
-                Book a Collaboration
-                <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-              </a>
+              <BookEventButton />
               <a
                 href="/assets/Danella_De_Cruz_Pricing_Guide.pdf"
                 target="_blank"

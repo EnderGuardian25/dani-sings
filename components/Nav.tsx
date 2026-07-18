@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { openBookingModal } from "@/lib/booking-modal-bus";
 
 const links = [
   { href: "#home",         label: "Home" },
@@ -53,12 +54,13 @@ export default function Nav() {
           ))}
         </nav>
 
-        <a
-          href="#contact"
+        <button
+          type="button"
+          onClick={openBookingModal}
           className="hidden md:inline-flex items-center font-display text-[16px] italic tracking-wide text-aubergine transition-colors hover:text-salmon-deep"
         >
           Book&nbsp;→
-        </a>
+        </button>
         <a
           href="#portfolio"
           className="font-display text-[16px] italic tracking-wide text-aubergine md:hidden"

@@ -16,6 +16,7 @@
 import { useEffect } from "react";
 import { useReducedMotion } from "framer-motion";
 import Lenis from "lenis";
+import { setLenis } from "@/lib/lenis-store";
 
 // Fixed nav bar is h-16 (64px); leave a little breathing room above anchor targets.
 const ANCHOR_OFFSET = -80;
@@ -33,6 +34,9 @@ export default function SmoothScroll() {
       smoothWheel: true,
       touchMultiplier: 1.5,
     });
+
+    // Expose the instance so BookingModal can stop/start page scroll.
+    setLenis(lenis);
 
     let rafId = requestAnimationFrame(function raf(time) {
       lenis.raf(time);
@@ -62,6 +66,7 @@ export default function SmoothScroll() {
     return () => {
       document.removeEventListener("click", onClick);
       cancelAnimationFrame(rafId);
+      setLenis(null);
       lenis.destroy();
     };
   }, [reduce]);

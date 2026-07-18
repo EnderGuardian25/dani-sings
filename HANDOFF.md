@@ -8,10 +8,10 @@ A complete portfolio site for **Danella De Cruz**, an emerging cover artist and 
 
 ```bash
 cd D:\dani-sings
-npm run dev       # http://localhost:3000
+npm run dev       # http://localhost:3100
 ```
 
-Runs on **port 3000**. The preview server config lives at `.claude/launch.json`.
+Runs on **port 3100** (pinned via `-p 3100` in both the `dev` and `start` scripts in `package.json`). The preview server config lives at `.claude/launch.json`.
 
 **Judging scroll smoothness / performance:** always use a production build (`npm run build && npm run start`) — dev-mode React overhead makes scrolling look worse than it really is. All FPS numbers quoted in this document were measured on prod builds.
 
@@ -82,8 +82,11 @@ app/
   page.tsx            — async Server Component; fetches social stats; ISR revalidate: 86400
   globals.css         — Tailwind base + :root tokens + .glass + .hairline + .underline-grow + Lenis html.lenis rules (NO scroll-behavior: smooth — it fights Lenis)
 
+app/api/
+  book/route.ts       — booking-form GATE (not a proxy — see Booking Form section): in-memory per-IP rate limit (3 per 10 min) + honeypot + server-side validation
+
 components/
-  SmoothScroll.tsx    — "use client" — headless Lenis smooth-scroll driver, mounted once in layout.tsx (respects reduced-motion; smooth-scrolls #anchor links with an 80px nav offset)
+  SmoothScroll.tsx    — "use client" — headless Lenis smooth-scroll driver, mounted once in layout.tsx (respects reduced-motion; smooth-scrolls #anchor links with an 80px nav offset); registers the instance in lib/lenis-store.ts
   Ambience.tsx        — "use client" — scroll-driven colour arc, drives the WebGL shader background (fixed, z-[-10])
   ShaderBackground.tsx — "use client" — isolated `@shadergradient/react` waterPlane canvas, dynamically imported (ssr: false); contains <ColorSync/> which updates colour uniforms per-frame without React re-renders
   Nav.tsx             — "use client" — frosted cream-blush bar fades in on scroll; salmon-deep hover
@@ -92,12 +95,17 @@ components/
   About.tsx           — Server Component — bio + live social stats
   CountUp.tsx         — "use client" — counts a stat up on first scroll-into-view (writes textContent directly, no per-frame React re-renders; reduced-motion → static)
   Performances.tsx    — "use client" — editorial row list inside a single blush-glass container
-  CTA.tsx             — contact section with email + PDF + social links
+  CTA.tsx             — contact section with booking button + PDF + social links
+  BookEventButton.tsx — "use client" — small client island: the "Book an Event" primary button inside the (server) CTA section
+  BookingModal.tsx    — "use client" — the booking form modal (see Booking Form section below); mounted once in page.tsx
   Footer.tsx          — copyright
   FadeIn.tsx          — reusable scroll-triggered fade-in (Framer Motion, once: true)
 
 lib/
   social-stats.ts     — fetches IG + TikTok follower counts server-side
+  booking.ts          — shared booking constants (dropdown option lists, field length limits) — imported by BOTH the modal and the API route so they can't drift
+  booking-modal-bus.ts — openBookingModal(): dispatches a window CustomEvent; lets Nav + CTA open the modal without shared React context
+  lenis-store.ts      — module-level get/set for the live Lenis instance (used by BookingModal to stop/start page scroll)
 
 public/
   performances/       — drop performance photos here (see Performances section below)
@@ -212,15 +220,35 @@ To add a performance, add an entry to the `performances` array:
 
 ### 7. CTA / Contact — `components/CTA.tsx`
 Centred glass panel. Three CTAs:
-- **Book a Collaboration** → `mailto:hello@danelladecruz.com`
+- **Book an Event** → opens the booking modal (`BookEventButton.tsx`)
 - **Download Pricing Guide** → `/assets/Danella_De_Cruz_Pricing_Guide.pdf`
-- **Email directly** → same mailto
+- **Email directly** → `mailto:hello@danelladecruz.com` (kept as a genuine email escape hatch)
 
 Social links: Instagram (`@danella.decruz`), TikTok (`@danella.decruz`), Spotify (placeholder — update to real artist page).
 Social icon hover: `border-salmon-deep`, `bg-salmon/15`, `text-salmon-deep`.
 
 ### 8. Footer — `components/Footer.tsx`
 Year hardcoded to `2026`. Text uses `text-secondary`. Border `border-dusk/30`.
+
+---
+
+## Booking Form (Web3Forms)
+
+"Book →" (nav) and "Book an Event" (CTA) open `components/BookingModal.tsx` via the event bus in `lib/booking-modal-bus.ts`. Fields: Name*, Email*, Event type* (Wedding / Corporate Event / Private Party / Birthday-Anniversary / Festival / Other), Performance format (optional, defaults "Not sure yet"), Event date (min = today), Budget (free text), Venue, Message*. Option lists + length limits live in `lib/booking.ts`, shared by modal and API route.
+
+**Submit flow (two steps — architecture forced by Web3Forms):**
+1. `POST /api/book` — the **gate**: in-memory per-IP rate limit (**3 per 10 min**, resets on redeploy/restart), honeypot check (`botcheck` field → fake success), field validation. Returns friendly errors (400/429) shown inline in the modal.
+2. If the gate says ok, the **browser posts directly to `https://api.web3forms.com/submit`** with `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY`.
+
+**Why not proxy the send through the server?** Web3Forms' free plan only accepts browser-originated submissions — server-side (Node fetch) requests hit a Cloudflare bot challenge ("Just a moment…" HTML instead of JSON) based on TLS fingerprinting, regardless of headers. Their Pro plan + whitelisted server IP is required to proxy. The access key is public by design (like a form action URL); the gate protects the quota from abuse *through the site*. Someone posting straight to Web3Forms with the key bypasses our rate limit — that's inherent to the free plan for every site using it.
+
+**Key** lives in `.env.local` (gitignored) as `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY` — **inlined at build time, rebuild after changing it**. Missing key → modal shows a graceful "email directly" message instead of the form erroring.
+
+**Modal internals** (`BookingModal.tsx`):
+- Scroll lock: `getLenis()?.stop()` (from `lib/lenis-store.ts`) + `overflow: hidden` on `<html>` + scrollbar-width padding compensation. The modal's own scroll container has `data-lenis-prevent` — Lenis checks that attribute *before* its `isStopped` guard, so the panel still scrolls while the page is locked.
+- Focus: auto-focuses first field, minimal Tab trap, Escape closes, focus returns to the trigger on close.
+- Success = inline "Request sent" view; form state resets after send. Reduced motion → fade-only transitions.
+- Honeypot input is included in BOTH the gate payload and the Web3Forms payload (Web3Forms drops botcheck-filled submissions natively too).
 
 ---
 
@@ -269,6 +297,8 @@ Both update every **24 hours** via ISR. No cron job needed.
 | Scroll stayed choppy even after the `ticking`/rAF throttle | Each colour-prop change re-rendered `<ShaderGradient/>`, which rebuilds its material + recompiles the shader: ~65ms main-thread long task per change (idle shader was fine at 240 FPS — the cost was React-driven material rebuilds, not the animation). Quantising updates into buckets only reduced how often the 65ms hit landed, not the hit itself | Bypass React entirely: scroll handler writes to `colorsRef`, `<ColorSync/>` inside the canvas mutates the shader's `uC1r..uC3b` uniforms per frame via `useFrame` (captured by wrapping `onBeforeCompile`). 240 FPS, zero long frames. See "Scroll-jank fix" above |
 | "White wave" band down the left of the screen | The `waterPlane` geometry's left edge was inside the viewport on wide screens at `cDistance={4.6}` | Reduced `cDistance` to `3.2` in `ShaderBackground.tsx` so the plane edge sits off-screen |
 | Native scrolling felt un-smooth / anchor jumps were abrupt | No smooth-scroll layer; CSS `scroll-behavior: smooth` also fights JS smooth-scroll libraries | Added Lenis via headless `SmoothScroll.tsx` (mounted in `layout.tsx`); removed `html { scroll-behavior: smooth }` and added the Lenis-recommended `html.lenis` CSS rules in `globals.css` |
+| Web3Forms returned Cloudflare HTML ("Just a moment…") to the server proxy | Free plan blocks non-browser submissions via TLS fingerprinting — forwarding browser headers doesn't help; Pro plan required for server-side | Browser submits to Web3Forms directly; `/api/book` is a rate-limit/validation gate the client must pass first (see Booking Form section) |
+| Booking form key change has no effect | `NEXT_PUBLIC_*` env vars are inlined into the client bundle at build time | Rebuild (`npm run build`) after editing `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY` in `.env.local` |
 
 ---
 

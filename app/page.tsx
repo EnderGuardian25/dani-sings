@@ -1,5 +1,6 @@
 import About from "@/components/About";
 import Ambience from "@/components/Ambience";
+import BookingModal from "@/components/BookingModal";
 import CTA from "@/components/CTA";
 import FeaturedCovers from "@/components/FeaturedCovers";
 import Footer from "@/components/Footer";
@@ -24,6 +25,7 @@ export default async function Page() {
       <Performances />
       <CTA />
       <Footer />
+      <BookingModal />
     </main>
   );
 }
