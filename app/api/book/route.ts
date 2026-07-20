@@ -59,6 +59,9 @@ function clientIp(req: NextRequest): string {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+// Loose phone check — only permit plausible phone characters; strictness comes
+// from requiring a minimum digit count (int'l number formats vary too much).
+const PHONE_ALLOWED_RE = /^[+()\-.\s\d]+$/;
 
 function bad(message: string, status = 400) {
   return NextResponse.json({ ok: false, error: message }, { status });
@@ -84,6 +87,7 @@ export async function POST(req: NextRequest) {
   const field = (v: unknown) => (typeof v === "string" ? v.trim() : "");
   const name = field(body.name);
   const email = field(body.email);
+  const mobile = field(body.mobile);
   const eventType = field(body.eventType);
   const performanceFormat = field(body.performanceFormat);
   const eventDate = field(body.eventDate);
@@ -101,6 +105,9 @@ export async function POST(req: NextRequest) {
   if (!name || name.length > FIELD_LIMITS.name) return bad("Please enter your name.");
   if (!EMAIL_RE.test(email) || email.length > FIELD_LIMITS.email)
     return bad("Please enter a valid email address.");
+  if (!mobile || mobile.length > FIELD_LIMITS.mobile) return bad("Please enter your mobile number.");
+  if (!PHONE_ALLOWED_RE.test(mobile) || (mobile.match(/\d/g)?.length ?? 0) < 7)
+    return bad("Please enter a valid mobile number.");
   if (!(EVENT_TYPES as readonly string[]).includes(eventType))
     return bad("Please choose an event type.");
   if (

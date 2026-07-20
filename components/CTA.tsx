@@ -1,5 +1,5 @@
 import { FaInstagram, FaTiktok, FaSpotify } from "react-icons/fa";
-import { HiOutlineDocumentArrowDown, HiOutlineEnvelope } from "react-icons/hi2";
+import { HiOutlineEnvelope } from "react-icons/hi2";
 import BookEventButton from "./BookEventButton";
 import FadeIn from "./FadeIn";
 
@@ -23,17 +23,7 @@ export default function CTA() {
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <BookEventButton />
               <a
-                href="/assets/Danella_De_Cruz_Pricing_Guide.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                className="inline-flex items-center gap-2 rounded-full border border-taupe-deep/60 px-7 py-3 text-sm font-medium text-aubergine transition-all duration-300 hover:-translate-y-0.5 hover:bg-blush/40"
-              >
-                <HiOutlineDocumentArrowDown className="h-4 w-4" />
-                Download Pricing Guide
-              </a>
-              <a
-                href="mailto:hello@danelladecruz.com"
+                href="mailto:hello@danelladc.com"
                 className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm text-aubergine transition-colors hover:text-salmon-deep"
               >
                 <HiOutlineEnvelope className="h-4 w-4" />

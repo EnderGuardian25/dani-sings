@@ -95,6 +95,7 @@ export default function BookingModal() {
   const [form, setForm] = useState({
     name: "",
     email: "",
+    mobile: "",
     eventType: "",
     performanceFormat: "",
     eventDate: "",
@@ -179,7 +180,7 @@ export default function BookingModal() {
     if (!WEB3FORMS_KEY) {
       setStatus("idle");
       setError(
-        "Booking isn't set up yet — please email hello@danelladecruz.com directly."
+        "Booking isn't set up yet — please email hello@danelladc.com directly."
       );
       return;
     }
@@ -214,6 +215,7 @@ export default function BookingModal() {
           // Web3Forms uses the `email` field as the reply-to address.
           name: form.name,
           email: form.email,
+          Mobile: form.mobile,
           "Event Type": form.eventType,
           "Performance Format": form.performanceFormat || "Not sure yet",
           "Event Date": form.eventDate || "Not specified",
@@ -235,6 +237,7 @@ export default function BookingModal() {
       setForm({
         name: "",
         email: "",
+        mobile: "",
         eventType: "",
         performanceFormat: "",
         eventDate: "",
@@ -370,6 +373,21 @@ export default function BookingModal() {
                       />
                     </Field>
                   </div>
+
+                  <Field label="Mobile number" required>
+                    <input
+                      type="tel"
+                      name="mobile"
+                      required
+                      inputMode="tel"
+                      maxLength={FIELD_LIMITS.mobile}
+                      placeholder="+94 77 123 4567"
+                      autoComplete="tel"
+                      value={form.mobile}
+                      onChange={(e) => set("mobile")(e.target.value)}
+                      className={inputClasses}
+                    />
+                  </Field>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="Event type" required>

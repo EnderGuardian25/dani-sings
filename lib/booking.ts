@@ -28,6 +28,7 @@ export type PerformanceFormat = (typeof PERFORMANCE_FORMATS)[number];
 export const FIELD_LIMITS = {
   name: 100,
   email: 200,
+  mobile: 40, // generous — allows country code + separators, e.g. "+94 77 123 4567"
   eventDate: 10, // YYYY-MM-DD
   budget: 100,
   venue: 200,
@@ -37,6 +38,8 @@ export const FIELD_LIMITS = {
 export type BookingPayload = {
   name: string;
   email: string;
+  /** Required — validated loosely (int'l formats vary too much for a strict regex). */
+  mobile: string;
   eventType: string;
   /** Optional — empty string means "not sure yet". */
   performanceFormat: string;

@@ -109,7 +109,7 @@ lib/
 
 public/
   performances/       — drop performance photos here (see Performances section below)
-  assets/             — Danella_De_Cruz_Pricing_Guide.pdf (replace with real PDF)
+  assets/             — (empty; the placeholder pricing-guide PDF was removed along with its CTA button)
 
 .env.local.example    — IG_USER_ID + IG_GRAPH_TOKEN template
 INSTAGRAM_SETUP.md    — full walkthrough for setting up the Instagram Graph API token
@@ -219,10 +219,11 @@ To add a performance, add an entry to the `performances` array:
 ```
 
 ### 7. CTA / Contact — `components/CTA.tsx`
-Centred glass panel. Three CTAs:
+Centred glass panel. Two CTAs:
 - **Book an Event** → opens the booking modal (`BookEventButton.tsx`)
-- **Download Pricing Guide** → `/assets/Danella_De_Cruz_Pricing_Guide.pdf`
-- **Email directly** → `mailto:hello@danelladecruz.com` (kept as a genuine email escape hatch)
+- **Email directly** → `mailto:hello@danelladc.com` (kept as a genuine email escape hatch)
+
+(The "Download Pricing Guide" button and its placeholder PDF at `public/assets/` were removed.)
 
 Social links: Instagram (`@danella.decruz`), TikTok (`@danella.decruz`), Spotify (placeholder — update to real artist page).
 Social icon hover: `border-salmon-deep`, `bg-salmon/15`, `text-salmon-deep`.
@@ -234,7 +235,7 @@ Year hardcoded to `2026`. Text uses `text-secondary`. Border `border-dusk/30`.
 
 ## Booking Form (Web3Forms)
 
-"Book →" (nav) and "Book an Event" (CTA) open `components/BookingModal.tsx` via the event bus in `lib/booking-modal-bus.ts`. Fields: Name*, Email*, Event type* (Wedding / Corporate Event / Private Party / Birthday-Anniversary / Festival / Other), Performance format (optional, defaults "Not sure yet"), Event date (min = today), Budget (free text), Venue* (name & city), Message (optional — emails show "No message provided." when blank). Option lists + length limits live in `lib/booking.ts`, shared by modal and API route.
+"Book →" (nav) and "Book an Event" (CTA) open `components/BookingModal.tsx` via the event bus in `lib/booking-modal-bus.ts`. Fields: Name*, Email*, Mobile number* (loose validation — must be plausible chars with ≥7 digits; int'l formats vary too much for a strict regex), Event type* (Wedding / Corporate Event / Private Party / Birthday-Anniversary / Festival / Other), Performance format (optional, defaults "Not sure yet"), Event date (min = today), Budget (free text), Venue* (name & city), Message (optional — emails show "No message provided." when blank). Option lists + length limits live in `lib/booking.ts`, shared by modal and API route.
 
 **Submit flow (two steps — architecture forced by Web3Forms):**
 1. `POST /api/book` — the **gate**: in-memory per-IP rate limit (**3 per 10 min**, resets on redeploy/restart), honeypot check (`botcheck` field → fake success), field validation. Returns friendly errors (400/429) shown inline in the modal.
@@ -271,11 +272,10 @@ Both update every **24 hours** via ISR. No cron job needed.
 
 | Item | Where | What to do |
 |---|---|---|
-| Pricing Guide PDF | `public/assets/Danella_De_Cruz_Pricing_Guide.pdf` | Replace placeholder with real PDF |
 | Performance photos | `public/performances/` | Drop JPG/PNG files here, add paths to `performances` array in `Performances.tsx` |
 | Cover art photos | `FeaturedCovers.tsx` | Replace gradient placeholders with real `next/image` thumbnails from Instagram |
 | Spotify URL | `CTA.tsx` | Replace `https://spotify.com` with Danella's actual Spotify artist page |
-| Email address | `CTA.tsx` | `hello@danelladecruz.com` — update if different |
+| Email address | `CTA.tsx` | `hello@danelladc.com` (Zoho mail on danelladc.com) — settled |
 | Instagram API | `.env.local` | Follow `INSTAGRAM_SETUP.md` for live follower count |
 
 ---
@@ -331,7 +331,7 @@ Uses the OpenNext Cloudflare adapter (`@opennextjs/cloudflare`). Config: `wrangl
 Use Cloudflare **Workers Builds** (git integration): Workers & Pages → danella-portfolio → Settings → Builds → connect the GitHub repo, branch `main`, build command `npx opennextjs-cloudflare build`, deploy command `npx opennextjs-cloudflare deploy`. ⚠️ `.env.local` is gitignored, so set `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY` as a **build-time variable** in the Builds settings or the CI build produces a form that shows the "not set up" fallback. The KV namespace id in `wrangler.jsonc` IS committed (it's not a secret). Alternative if Workers Builds is unavailable: GitHub Actions with `cloudflare/wrangler-action` + `CLOUDFLARE_API_TOKEN` secret.
 
 **Open content items to settle before/at launch:**
-- Site contact email is still `hello@danelladecruz.com` (in `CTA.tsx` mailto + `BookingModal.tsx` fallback error + `app/api/book/route.ts` 503 message). Zoho mail exists on danelladc.com — ask user which real address to use.
+- Site contact email settled on `hello@danelladc.com` (Zoho mail on danelladc.com), updated in `CTA.tsx` mailto + `BookingModal.tsx` fallback error.
 - Spotify link in `CTA.tsx` is still `https://spotify.com` placeholder.
 
 Redeploys after setup: `npm run deploy` (or just push, once auto-deploy is wired).
