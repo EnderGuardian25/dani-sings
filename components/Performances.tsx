@@ -1,87 +1,240 @@
 "use client";
 
 import Image from "next/image";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import FadeIn from "./FadeIn";
+import { getLenis } from "@/lib/lenis-store";
 
 /**
- * To add real photos to a performance, drop image files into
+ * To add media to a performance, drop web-ready files into
  *   public/performances/
- * and fill the `images` array with the filename, e.g.:
- *   images: ["/performances/loft-may25-1.jpg", "/performances/loft-may25-2.jpg"]
- * Up to 3 images per entry are displayed. Leave the array empty (or omit it)
- * and the image row is hidden — no broken placeholders.
+ * and add entries to the `media` array:
+ *   { kind: "image", src: "/performances/foo.jpg" }
+ *   { kind: "video", src: "/performances/foo.mp4", poster: "/performances/foo-poster.jpg" }
+ * Videos need a poster image — only the poster loads until the visitor
+ * presses play (the video itself opens in the lightbox).
+ *
+ * Keep videos compressed (H.264, ≤720px wide, ~1 Mbps) — Cloudflare Workers
+ * rejects static assets over 25 MB, and phones thank you. Originals live in
+ * /media-originals (gitignored); re-encode with ffmpeg, don't copy them here.
  */
+
+type MediaItem = {
+  kind: "image" | "video";
+  src: string;
+  poster?: string; // required for videos
+};
 
 type Performance = {
   event: string;
   venue: string;
   date: string;
-  location: string;
-  type: "Live Set" | "Feature" | "Showcase" | "Collaboration" | "Open Mic";
   link?: string;
-  images?: string[];
+  media?: MediaItem[];
 };
 
 const performances: Performance[] = [
   {
-    event: "Acoustic Evening at The Loft",
-    venue: "The Loft Sessions",
-    date: "May 2025",
-    location: "Colombo, Sri Lanka",
-    type: "Live Set",
-    images: [],
+    event: "Taylor Swift Tribute Night",
+    venue: "Ma Café",
+    date: "18 July 2026",
+    media: [
+      { kind: "video", src: "/performances/taylor-swift-tribute.mp4", poster: "/performances/taylor-swift-tribute-poster.jpg" },
+      { kind: "image", src: "/performances/taylor-swift-tribute-1.jpg" },
+      { kind: "image", src: "/performances/taylor-swift-tribute-2.jpg" },
+    ],
   },
   {
-    event: "Indie Showcase — Spring Edition",
-    venue: "Stage 44",
-    date: "March 2025",
-    location: "Colombo, Sri Lanka",
-    type: "Showcase",
-    images: [],
+    event: "Seylan Bank Media Cocktail Night",
+    venue: "Oak Room, Cinnamon Grand",
+    date: "24 June 2026",
+    media: [
+      { kind: "video", src: "/performances/seylan-bank-1.mp4", poster: "/performances/seylan-bank-1-poster.jpg" },
+      { kind: "video", src: "/performances/seylan-bank-2.mp4", poster: "/performances/seylan-bank-2-poster.jpg" },
+      { kind: "image", src: "/performances/seylan-bank-1.jpg" },
+      { kind: "image", src: "/performances/seylan-bank-2.jpg" },
+    ],
   },
   {
-    event: "Valentine's Night Live",
-    venue: "The Grand Ballroom",
-    date: "February 2025",
-    location: "Colombo, Sri Lanka",
-    type: "Feature",
-    images: [],
+    event: "StageCraft",
+    venue: "Nelum Pokuna Theatre",
+    date: "22 May 2026",
+    media: [
+      { kind: "video", src: "/performances/stagecraft.mp4", poster: "/performances/stagecraft-poster.jpg" },
+      { kind: "image", src: "/performances/stagecraft-1.jpg" },
+      { kind: "image", src: "/performances/stagecraft-2.jpg" },
+    ],
   },
   {
-    event: "New Year's Eve Open Mic",
-    venue: "Barefoot Garden Café",
-    date: "December 2024",
-    location: "Colombo, Sri Lanka",
-    type: "Open Mic",
-    images: [],
+    event: "Avurudu Celebrations",
+    venue: "The Shoppes, Cinnamon Life",
+    date: "14 April 2026",
+    media: [
+      { kind: "video", src: "/performances/avurudu-celebrations.mp4", poster: "/performances/avurudu-celebrations-poster.jpg" },
+    ],
   },
   {
-    event: "Cover Night — Vol. 3",
-    venue: "Café Uga Escape",
-    date: "October 2024",
-    location: "Negombo, Sri Lanka",
-    type: "Live Set",
-    images: [],
+    event: "Avurudu Countdown",
+    venue: "The Shoppes, Cinnamon Life",
+    date: "11 April 2026",
+    media: [
+      { kind: "video", src: "/performances/avurudu-countdown-1.mp4", poster: "/performances/avurudu-countdown-1-poster.jpg" },
+      { kind: "video", src: "/performances/avurudu-countdown-2.mp4", poster: "/performances/avurudu-countdown-2-poster.jpg" },
+    ],
   },
   {
-    event: "Arts & Music Festival",
-    venue: "Nelum Pokuna Amphitheatre",
-    date: "August 2024",
-    location: "Colombo, Sri Lanka",
-    type: "Showcase",
-    images: [],
+    event: "Valentine's High Tea",
+    venue: "Gatz, Cinnamon Life",
+    date: "14 February 2026",
+    media: [
+      { kind: "video", src: "/performances/valentines-high-tea.mp4", poster: "/performances/valentines-high-tea-poster.jpg" },
+    ],
   },
 ];
 
-const typePill: Record<Performance["type"], string> = {
-  "Live Set":      "bg-salmon/15 text-salmon-deep",
-  "Feature":       "bg-aubergine/10 text-aubergine/80",
-  "Showcase":      "bg-mauve/15 text-mauve",
-  "Collaboration": "bg-salmon/15 text-salmon-deep",
-  "Open Mic":      "bg-aubergine/10 text-aubergine/80",
-};
+function MediaTile({
+  item,
+  label,
+  onOpen,
+}: {
+  item: MediaItem;
+  label: string;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={item.kind === "video" ? `Play video — ${label}` : `View photo — ${label}`}
+      className={`group/tile relative h-48 shrink-0 overflow-hidden rounded-xl sm:h-56 ${
+        item.kind === "video" ? "aspect-[9/16]" : "aspect-[3/4]"
+      }`}
+    >
+      <Image
+        src={item.kind === "video" ? item.poster! : item.src}
+        alt={label}
+        fill
+        className="object-cover transition-transform duration-500 group-hover/tile:scale-[1.04]"
+        sizes="(max-width: 640px) 40vw, 170px"
+      />
+      {item.kind === "video" && (
+        <span className="absolute inset-0 flex items-center justify-center">
+          <span
+            className="flex h-11 w-11 items-center justify-center rounded-full shadow-soft transition-transform duration-300 group-hover/tile:scale-110"
+            style={{
+              background: "rgba(250, 247, 244, 0.85)",
+              backdropFilter: "blur(4px)",
+              WebkitBackdropFilter: "blur(4px)",
+            }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="ml-0.5 h-4 w-4 text-aubergine"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M8 5.5v13l11-6.5-11-6.5z" />
+            </svg>
+          </span>
+        </span>
+      )}
+    </button>
+  );
+}
+
+function Lightbox({
+  item,
+  label,
+  onClose,
+}: {
+  item: MediaItem;
+  label: string;
+  onClose: () => void;
+}) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    getLenis()?.stop();
+    document.documentElement.style.overflow = "hidden";
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.documentElement.style.overflow = "";
+      getLenis()?.start();
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-10"
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      data-lenis-prevent
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          background: "rgba(45, 27, 61, 0.88)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+        onClick={onClose}
+      />
+      <button
+        ref={closeRef}
+        type="button"
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full text-frost transition-colors hover:text-salmon sm:right-6 sm:top-6"
+        style={{ background: "rgba(250, 247, 244, 0.12)" }}
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+      <figure className="relative z-[1] flex max-h-full max-w-full flex-col items-center">
+        {item.kind === "video" ? (
+          <video
+            src={item.src}
+            poster={item.poster}
+            controls
+            autoPlay
+            playsInline
+            className="max-h-[80vh] max-w-full rounded-xl"
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- already web-sized; next/image fill needs fixed dims
+          <img src={item.src} alt={label} className="max-h-[80vh] max-w-full rounded-xl object-contain" />
+        )}
+        <figcaption className="mt-3 text-center text-[11px] uppercase tracking-wider2 text-frost/70">
+          {label}
+        </figcaption>
+      </figure>
+    </div>,
+    document.body
+  );
+}
 
 export default function Performances() {
+  const [lightbox, setLightbox] = useState<{ item: MediaItem; label: string } | null>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+
+  const openLightbox = (item: MediaItem, label: string) => {
+    triggerRef.current = document.activeElement as HTMLElement;
+    setLightbox({ item, label });
+  };
+
+  const closeLightbox = useCallback(() => {
+    setLightbox(null);
+    triggerRef.current?.focus();
+  }, []);
+
   return (
     <section id="performances" className="relative py-28 md:py-36">
       <div className="hairline mx-auto mb-24 w-2/3 max-w-3xl" />
@@ -99,8 +252,8 @@ export default function Performances() {
               </h2>
             </div>
             <p className="max-w-xs text-sm text-aubergine/80">
-              A record of stages, rooms, and evenings — each one a song shared
-              with a room full of people.
+              A record of stages, rooms, and evenings across Colombo — each one
+              a song shared with a room full of people.
             </p>
           </div>
         </FadeIn>
@@ -118,7 +271,7 @@ export default function Performances() {
             }}
           >
             {performances.map((p, i) => {
-              const imgs = (p.images ?? []).slice(0, 3);
+              const label = `${p.event} — ${p.venue}`;
               return (
                 <div key={i} className="group relative">
 
@@ -128,21 +281,17 @@ export default function Performances() {
                   {/* Row content */}
                   <div className="relative flex flex-col gap-5 px-8 py-7 sm:flex-row sm:items-center sm:justify-between">
 
-                    {/* Left — pill + event name + venue */}
-                    <div className="flex flex-col gap-2 min-w-0">
-                      <span className={`inline-block w-fit rounded-full px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ${typePill[p.type]}`}>
-                        {p.type}
-                      </span>
+                    {/* Left — event name + venue */}
+                    <div className="flex min-w-0 flex-col gap-1.5">
                       <p className="font-display text-xl text-aubergine transition-colors duration-300 group-hover:text-salmon-deep md:text-2xl">
                         {p.event}
                       </p>
                       <p className="text-sm text-secondary">{p.venue}</p>
                     </div>
 
-                    {/* Right — date + location + optional link */}
+                    {/* Right — date + optional link */}
                     <div className="flex shrink-0 flex-col items-start gap-1 sm:items-end">
                       <p className="font-display text-base italic text-aubergine/70">{p.date}</p>
-                      <p className="text-[11px] uppercase tracking-wider2 text-secondary">{p.location}</p>
                       {p.link && (
                         <a
                           href={p.link}
@@ -156,30 +305,16 @@ export default function Performances() {
                     </div>
                   </div>
 
-                  {/* Image gallery — only rendered when images are provided */}
-                  {imgs.length > 0 && (
-                    <div
-                      className={`relative grid gap-1 px-8 pb-7 ${
-                        imgs.length === 1
-                          ? "grid-cols-1"
-                          : imgs.length === 2
-                          ? "grid-cols-2"
-                          : "grid-cols-3"
-                      }`}
-                    >
-                      {imgs.map((src, j) => (
-                        <div
+                  {/* Media strip — poster thumbnails, click to open in the lightbox */}
+                  {(p.media ?? []).length > 0 && (
+                    <div className="relative flex flex-wrap gap-2 px-8 pb-7">
+                      {p.media!.map((m, j) => (
+                        <MediaTile
                           key={j}
-                          className="relative aspect-[4/3] overflow-hidden rounded-xl"
-                        >
-                          <Image
-                            src={src}
-                            alt={`${p.event} — photo ${j + 1}`}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                            sizes="(max-width: 768px) 50vw, 300px"
-                          />
-                        </div>
+                          item={m}
+                          label={label}
+                          onOpen={() => openLightbox(m, label)}
+                        />
                       ))}
                     </div>
                   )}
@@ -216,6 +351,10 @@ export default function Performances() {
         </FadeIn>
 
       </div>
+
+      {lightbox && (
+        <Lightbox item={lightbox.item} label={lightbox.label} onClose={closeLightbox} />
+      )}
     </section>
   );
 }

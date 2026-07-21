@@ -108,8 +108,10 @@ lib/
   lenis-store.ts      — module-level get/set for the live Lenis instance (used by BookingModal to stop/start page scroll)
 
 public/
-  performances/       — drop performance photos here (see Performances section below)
+  performances/       — web-ready performance media: compressed mp4s + poster jpgs + photos (see Performances section below)
   assets/             — (empty; the placeholder pricing-guide PDF was removed along with its CTA button)
+
+media-originals/      — ORIGINAL uncompressed photos/videos (gitignored, never deployed — one file is 34 MB, over the Workers asset limit)
 
 .env.local.example    — IG_USER_ID + IG_GRAPH_TOKEN template
 INSTAGRAM_SETUP.md    — full walkthrough for setting up the Instagram Graph API token
@@ -181,42 +183,30 @@ Two-column layout (5/7 split on md+). Left: name/tagline glass panel. Right: bio
 **Live stats** passed from `page.tsx` as `liveStats?: SocialStats`. Stats labels use `text-secondary`. Stats divider uses `border-dusk/40`. Falls back to `"8.8K+"` (IG) / `"6.6K+"` (TikTok) if the live fetch fails. "Performing Since" is `2025`. Each value renders through `<CountUp/>`, which rolls the number up on first scroll-into-view — followers count from 0, the year from 2000 (so it reads as a year, not a tally).
 
 ### 6. Recent Performances — `components/Performances.tsx`
-**Redesigned as an editorial row list.** Structure:
-- **Header**: standard `.glass` panel (cream) — "LIVE" label + "Recent Performances" h2 + subtitle
-- **List**: single blush-glass container (`rgba(237,180,168,0.18)` fill, `rgba(196,90,74,0.15)` border) holding all 6 performances as typographic rows
-- Each row: type pill + event name (Playfair, transitions to `salmon-deep` on hover) + venue on the left; italic date + all-caps location on the right
-- Rows separated by salmon-tinted gradient hairlines
-- Hover: soft `bg-blush/20` wash over the row
+**Editorial row list with REAL data (all 6 events are genuine, filled 2026-07-21) + photo/video gallery.** Structure:
+- **Header**: standard `.glass` panel (cream) — "LIVE" label + "Recent Performances" h2 + subtitle (mentions Colombo once — per-row location was removed since every event is in Colombo; type pills were also removed by request)
+- **List**: single blush-glass container (`rgba(237,180,168,0.18)` fill, `rgba(196,90,74,0.15)` border) holding all 6 performances as typographic rows, newest → oldest
+- Each row: event name (Playfair, transitions to `salmon-deep` on hover) + venue on the left; italic full date (e.g. "18 July 2026") on the right; optional "View event →" link
+- Below the row: **media strip** — portrait thumbnail tiles (`h-48 sm:h-56`, `flex flex-wrap`), videos `aspect-[9/16]`, photos `aspect-[3/4]`
+- Rows separated by salmon-tinted gradient hairlines; hover: soft `bg-blush/20` wash
 
-**No timeline dots or connecting lines.**
-
-Performance type pills:
-| Type | Style |
-|---|---|
-| Live Set | `bg-salmon/15 text-salmon-deep` |
-| Showcase | `bg-mauve/15 text-mauve` |
-| Feature | `bg-aubergine/10 text-aubergine/80` |
-| Open Mic | `bg-aubergine/10 text-aubergine/80` |
-| Collaboration | `bg-salmon/15 text-salmon-deep` |
-
-**Image gallery** — each performance supports up to 3 photos:
+**Media / lightbox system:**
 ```ts
-images: ["/performances/filename.jpg"]
+media: [
+  { kind: "image", src: "/performances/foo.jpg" },
+  { kind: "video", src: "/performances/foo.mp4", poster: "/performances/foo-poster.jpg" },
+]
 ```
-Drop files into `public/performances/`. Gallery auto-adapts: 1=full, 2=2-col, 3=3-col.
+- Video tiles show only their poster JPEG + a play button — **the mp4 downloads nothing until clicked** (page weight stays tiny; all posters < 100 KB)
+- Clicking any tile opens a **lightbox** (rendered via `createPortal` to `document.body` — required because the blush container's `backdrop-filter` creates a containing block that would break `position: fixed`): aubergine/88 blurred backdrop, video plays with native controls + sound (`autoPlay playsInline`), Escape / backdrop / ✕ closes, Lenis stopped + `overflow: hidden` while open, `data-lenis-prevent` on the overlay, focus returns to the trigger tile
 
-To add a performance, add an entry to the `performances` array:
-```ts
-{
-  event: "Event Name",
-  venue: "Venue Name",
-  date: "Month Year",
-  location: "City, Country",
-  type: "Live Set",      // one of the 5 types above
-  link: "https://...",   // optional
-  images: [],            // optional, up to 3 paths
-}
-```
+**Media pipeline (how the current files were produced):**
+- Originals live in `/media-originals` (**gitignored** — never put them in `public/`, the 34 MB original exceeds Cloudflare Workers' 25 MB per-asset limit)
+- Videos re-encoded with ffmpeg: `libx264 -preset slow -crf 27 -maxrate 900k -bufsize 1800k`, scale ≤ 720px wide, `aac 96k`, `-movflags +faststart`; posters extracted at the 2s mark (`-ss 2 -frames:v 1 -q:v 3`)
+- Encode script kept at the session scratchpad (`encode.sh`) — recreate from the flags above if needed; ffmpeg was a portable download, not installed
+- Result: ~108 MB of source video → ~72 MB, largest single file 23.4 MB (seylan-bank-1.mp4, a 3:15 clip — under the 25 MB Workers limit but close; trim or lower `maxrate` if it ever needs to shrink)
+
+**Current real performances (newest → oldest):** Taylor Swift Tribute Night (Ma Café, 18 Jul 2026) · Seylan Bank Media Cocktail Night (Oak Room, Cinnamon Grand, 24 Jun 2026) · StageCraft (Nelum Pokuna Theatre, 22 May 2026) · Avurudu Celebrations (The Shoppes, Cinnamon Life, 14 Apr 2026) · Avurudu Countdown (The Shoppes, Cinnamon Life, 11 Apr 2026) · Valentine's High Tea (Gatz, Cinnamon Life, 14 Feb 2026)
 
 ### 7. CTA / Contact — `components/CTA.tsx`
 Centred glass panel. Two CTAs:
@@ -272,7 +262,7 @@ Both update every **24 hours** via ISR. No cron job needed.
 
 | Item | Where | What to do |
 |---|---|---|
-| Performance photos | `public/performances/` | Drop JPG/PNG files here, add paths to `performances` array in `Performances.tsx` |
+| ~~Performance photos/videos~~ | `public/performances/` | ✅ DONE 2026-07-21 — real events + compressed media in place (see Performances section) |
 | Cover art photos | `FeaturedCovers.tsx` | Replace gradient placeholders with real `next/image` thumbnails from Instagram |
 | Spotify URL | `CTA.tsx` | Replace `https://spotify.com` with Danella's actual Spotify artist page |
 | Email address | `CTA.tsx` | `hello@danelladc.com` (Zoho mail on danelladc.com) — settled |

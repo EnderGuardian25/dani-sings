@@ -10,3 +10,6 @@ next-env.d.ts
 .open-next
 .wrangler
 *.tsbuildinfo
+
+# original (uncompressed) media — web versions live in public/performances
+/media-originals
