@@ -296,35 +296,31 @@ Both update every **24 hours** via ISR. No cron job needed.
 
 Uses the OpenNext Cloudflare adapter (`@opennextjs/cloudflare`). Config: `wrangler.jsonc` + `open-next.config.ts` (KV incremental cache for the 24h ISR + memory queue). Verified working locally in workerd via `npx wrangler dev` (or `npm run preview`, port 8787, no login needed).
 
-### ⏳ DEPLOYMENT STATE AS OF 2026-07-18 (resume here)
+### ✅ DEPLOYMENT STATE AS OF 2026-07-22 — LIVE
+
+**The site is live at https://danelladc.com and https://www.danelladc.com** (both custom domains attached to the `danella-portfolio` Worker). Zone is Active on Cloudflare's nameservers (`anderson`/`nucum.ns.cloudflare.com`), account **DDC** (`2d15be036e5b0232ff7d67b219ddd052`).
 
 **Done:**
-- Repo fully deploy-ready: adapter installed, `wrangler.jsonc` (Worker name `danella-portfolio`), `open-next.config.ts`, `npm run deploy` script, tested in workerd.
-- User created the Cloudflare account, added the `danelladc.com` zone (Free plan), and confirmed the scanned DNS records.
-- Domain is registered at **Squarespace**; user was about to change nameservers there → Cloudflare's. May or may not be Active yet — check dashboard first.
-- GitHub remote exists: `https://github.com/EnderGuardian25/dani-sings.git`.
+- Repo deploy-ready (OpenNext adapter, `wrangler.jsonc`, `open-next.config.ts`, `npm run deploy`).
+- `wrangler login` done on this machine (OAuth). KV namespace `NEXT_INC_CACHE_KV` created — id `5c4c6fd5382f473f955e95f091c56f2b`, committed in `wrangler.jsonc`.
+- Squarespace parking records (4×A + `www` CNAME + `_domainconnect`) deleted; **Zoho MX + TXT records kept intact** — email unaffected.
+- Custom domains `danelladc.com` + `www.danelladc.com` attached (declared as `routes` with `custom_domain: true` in `wrangler.jsonc`, so CI redeploys keep them).
+- **Auto-deploy on push is LIVE** via GitHub Actions (`.github/workflows/deploy.yml`): every push to `main` runs `npm ci` + `npm run deploy`. First green run 2026-07-22. Repo secrets set: `CLOUDFLARE_API_TOKEN` (Edit Workers template), `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY`. (Chose Actions over Cloudflare Workers Builds because it's code-defined and testable by push.)
 
-**Critical DNS facts (from the scanned records):**
-- **MX records `mx2`/`mx3.zoho.com` — NEVER delete.** The domain has Zoho-hosted email.
-- 4 × `A` records (198.185.159.x / 198.49.23.x) + `www` CNAME (`ext-sq.squarespace…`) + `_domainconnect` CNAME are **Squarespace parking records** — they must be **deleted right before attaching the Worker custom domains** (Cloudflare refuses custom domains while conflicting records exist).
+**Critical DNS facts (still true — for future edits):**
+- **MX records `mx2`/`mx3.zoho.com` — NEVER delete.** Zoho-hosted email.
+- Custom-domain DNS records are now Cloudflare-managed by the Worker; don't hand-edit them.
 
-**Remaining steps, in order:**
-1. Verify zone is **Active** in the Cloudflare dashboard (nameserver change at Squarespace: Domains → danelladc.com → DNS → Nameservers → custom).
-2. `npx wrangler login` (interactive — user runs it, e.g. `! npx wrangler login`).
-3. `npx wrangler kv namespace create NEXT_INC_CACHE_KV` → paste the printed id into `wrangler.jsonc` replacing `REPLACE_WITH_KV_NAMESPACE_ID`.
-4. `npm run deploy` (local build reads `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY` from `.env.local`).
-5. Delete the Squarespace `A`/`www`/`_domainconnect` records (KEEP MX), then dashboard → Workers & Pages → danella-portfolio → Settings → **Domains & Routes** → add `danelladc.com` + `www.danelladc.com`.
-6. Security → WAF → **Rate limiting rules** → 1 free rule on `/api/book` (e.g. 5 req / 10 min per IP) — the in-app limiter is per-isolate on Workers, this is the durable backstop.
-7. Google Search Console: verify domain via DNS TXT, submit `https://danelladc.com/sitemap.xml`.
+**Remaining launch steps:**
+1. **WAF rate-limit rule on `/api/book`** (dashboard, Free plan allows 1): Cloudflare → danelladc.com → Security → WAF → Rate limiting rules → e.g. 5 req / 10 min per IP → Block. Durable backstop for the in-app limiter (which is per-isolate on Workers).
+2. **Google Search Console**: add `danelladc.com` (Domain property) → verify via DNS TXT (add the TXT in Cloudflare DNS) → submit `https://danelladc.com/sitemap.xml`.
 
-**Also planned for that session — auto-deploy on push:**
-Use Cloudflare **Workers Builds** (git integration): Workers & Pages → danella-portfolio → Settings → Builds → connect the GitHub repo, branch `main`, build command `npx opennextjs-cloudflare build`, deploy command `npx opennextjs-cloudflare deploy`. ⚠️ `.env.local` is gitignored, so set `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY` as a **build-time variable** in the Builds settings or the CI build produces a form that shows the "not set up" fallback. The KV namespace id in `wrangler.jsonc` IS committed (it's not a secret). Alternative if Workers Builds is unavailable: GitHub Actions with `cloudflare/wrangler-action` + `CLOUDFLARE_API_TOKEN` secret.
+**Redeploys:** just `git push origin main` (auto-deploys). Manual fallback: `npm run deploy`.
 
-**Open content items to settle before/at launch:**
-- Site contact email settled on `hello@danelladc.com` (Zoho mail on danelladc.com), updated in `CTA.tsx` mailto + `BookingModal.tsx` fallback error.
+**Open content items to settle:**
 - Spotify link in `CTA.tsx` is still `https://spotify.com` placeholder.
-
-Redeploys after setup: `npm run deploy` (or just push, once auto-deploy is wired).
+- Contact email settled: `hello@danelladc.com` (Zoho).
+- Favicon missing (404 on `/favicon.ico`) — add one to `app/`.
 
 ---
 
