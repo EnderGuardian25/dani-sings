@@ -338,9 +338,6 @@ export default function Performances() {
         {/* Booking nudge */}
         <FadeIn delay={0.15}>
           <div className="mt-14 text-center">
-            <p className="mb-4 text-sm text-aubergine/80">
-              Interested in booking Danella for your event?
-            </p>
             <a
               href="#contact"
               className="inline-flex items-center gap-2 rounded-full border border-taupe-deep/60 px-7 py-3 text-sm font-medium text-aubergine transition-all duration-300 hover:-translate-y-0.5 hover:bg-blush/40"
