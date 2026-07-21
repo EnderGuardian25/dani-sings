@@ -80,6 +80,7 @@ Custom letter-spacing: `tracking-wider2` (0.18em)
 app/
   layout.tsx          — fonts (Playfair Display + Inter), metadata, body wrapper; mounts <SmoothScroll/>
   page.tsx            — async Server Component; fetches social stats; ISR revalidate: 86400
+  icon.png            — favicon (blush tile + Playfair "D" + salmon dot); Next auto-generates the <link rel="icon"> from this file — no code needed
   globals.css         — Tailwind base + :root tokens + .glass + .hairline + .underline-grow + Lenis html.lenis rules (NO scroll-behavior: smooth — it fights Lenis)
 
 app/api/
@@ -94,8 +95,8 @@ components/
   FeaturedCovers.tsx  — "use client" — 4 cover cards in 2-col grid (equal-height via flex)
   About.tsx           — Server Component — bio + live social stats
   CountUp.tsx         — "use client" — counts a stat up on first scroll-into-view (writes textContent directly, no per-frame React re-renders; reduced-motion → static)
-  Performances.tsx    — "use client" — editorial row list inside a single blush-glass container
-  CTA.tsx             — contact section with booking button + PDF + social links
+  Performances.tsx    — "use client" — editorial row list (single blush-glass container) with a per-row photo/video media strip; poster thumbnails open a click-to-play lightbox (portal to body, Lenis-aware)
+  CTA.tsx             — contact section with booking button + social links
   BookEventButton.tsx — "use client" — small client island: the "Book an Event" primary button inside the (server) CTA section
   BookingModal.tsx    — "use client" — the booking form modal (see Booking Form section below); mounted once in page.tsx
   Footer.tsx          — copyright
@@ -306,21 +307,18 @@ Uses the OpenNext Cloudflare adapter (`@opennextjs/cloudflare`). Config: `wrangl
 - Squarespace parking records (4×A + `www` CNAME + `_domainconnect`) deleted; **Zoho MX + TXT records kept intact** — email unaffected.
 - Custom domains `danelladc.com` + `www.danelladc.com` attached (declared as `routes` with `custom_domain: true` in `wrangler.jsonc`, so CI redeploys keep them).
 - **Auto-deploy on push is LIVE** via GitHub Actions (`.github/workflows/deploy.yml`): every push to `main` runs `npm ci` + `npm run deploy`. First green run 2026-07-22. Repo secrets set: `CLOUDFLARE_API_TOKEN` (Edit Workers template), `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY`. (Chose Actions over Cloudflare Workers Builds because it's code-defined and testable by push.)
+- **WAF rate-limit rule on `/api/book`** deployed (Cloudflare → Security → Security rules → Rate limiting): 5 requests / 10 seconds per IP → Block 10s. Note: the Free plan only allows a 10-second window + 10-second block (longer periods are paid), so this is a flood cap, not the 10-minute rule originally planned. The real quota protection is the in-app limiter (3 per 10 min per IP in `app/api/book/route.ts`).
+- **Google Search Console** verified (DNS TXT) and `sitemap.xml` submitted.
+- **Favicon** added at `app/icon.png` (blush tile + Playfair "D" + salmon dot; Next auto-injects the `<link rel="icon">`). Live at `danelladc.com/icon.png`.
 
 **Critical DNS facts (still true — for future edits):**
 - **MX records `mx2`/`mx3.zoho.com` — NEVER delete.** Zoho-hosted email.
 - Custom-domain DNS records are now Cloudflare-managed by the Worker; don't hand-edit them.
 
-**Remaining launch steps:**
-1. **WAF rate-limit rule on `/api/book`** (dashboard, Free plan allows 1): Cloudflare → danelladc.com → Security → WAF → Rate limiting rules → e.g. 5 req / 10 min per IP → Block. Durable backstop for the in-app limiter (which is per-isolate on Workers).
-2. **Google Search Console**: add `danelladc.com` (Domain property) → verify via DNS TXT (add the TXT in Cloudflare DNS) → submit `https://danelladc.com/sitemap.xml`.
-
 **Redeploys:** just `git push origin main` (auto-deploys). Manual fallback: `npm run deploy`.
 
-**Open content items to settle:**
-- Spotify link in `CTA.tsx` is still `https://spotify.com` placeholder.
-- Contact email settled: `hello@danelladc.com` (Zoho).
-- Favicon missing (404 on `/favicon.ico`) — add one to `app/`.
+**Only open content item:**
+- Spotify link in `CTA.tsx` is still `https://spotify.com` placeholder — swap for Danella's real artist page. (Contact email is settled: `hello@danelladc.com`, Zoho.)
 
 ---
 
