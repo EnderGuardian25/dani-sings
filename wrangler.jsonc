@@ -8,13 +8,20 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  // Custom domains — Cloudflare creates/manages the DNS records itself.
+  // The old Squarespace parking records (A + www CNAME) must not exist
+  // when these attach; Zoho MX/TXT records are unaffected.
+  "routes": [
+    { "pattern": "danelladc.com", "custom_domain": true },
+    { "pattern": "www.danelladc.com", "custom_domain": true }
+  ],
   // Incremental cache for ISR (24h follower-count revalidation).
   // Create the namespace with:  npx wrangler kv namespace create NEXT_INC_CACHE_KV
   // then replace the placeholder id below with the one it prints.
   "kv_namespaces": [
     {
       "binding": "NEXT_INC_CACHE_KV",
-      "id": "REPLACE_WITH_KV_NAMESPACE_ID"
+      "id": "5c4c6fd5382f473f955e95f091c56f2b"
     }
   ],
   // Required by the revalidation queue — must match "name" above.
